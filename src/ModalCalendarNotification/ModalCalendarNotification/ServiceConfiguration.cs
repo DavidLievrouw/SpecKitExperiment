@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ModalCalendarNotification.CalendarProviders;
+using ModalCalendarNotification.Core.Features.Authentication;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
@@ -21,6 +23,15 @@ public static class ServiceConfiguration
 
         // Logging
         services.AddSingleton(Log.Logger);
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.ClearProviders();
+            loggingBuilder.AddSerilog(Log.Logger, dispose: false);
+        });
+
+        // Authentication
+        services.AddSingleton<IMsalTokenClient, MsalTokenClient>();
+        services.AddSingleton<IAuthenticationService, OAuthService>();
 
         // Configuration Management
         services.AddSingleton<IConfigurationService, ConfigurationService>();

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media.Imaging;
+using Microsoft.Extensions.DependencyInjection;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
 
 namespace ModalCalendarNotification.UI.Features.ConfigurationManagement;
@@ -7,17 +8,17 @@ namespace ModalCalendarNotification.UI.Features.ConfigurationManagement;
 public partial class ConfigurationDialog : Window
 {
     private readonly ConfigurationDialogViewModel _viewModel;
-    private readonly ProviderSelectionDialog _providerSelectionDialog;
+    private readonly IServiceProvider _serviceProvider;
 
     public ConfigurationDialog(
         ConfigurationDialogViewModel viewModel,
         SystemTrayManager systemTrayManager,
-        ProviderSelectionDialog providerSelectionDialog
+        IServiceProvider serviceProvider
     )
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _providerSelectionDialog = providerSelectionDialog;
+        _serviceProvider = serviceProvider;
         DataContext = viewModel;
 
         // Set the window icon from the SystemTrayManager
@@ -49,14 +50,18 @@ public partial class ConfigurationDialog : Window
 
     private void OpenProviderSelectionDialog()
     {
+        // Create a new instance of the dialog each time (WPF windows can only be shown once)
+        var providerSelectionDialog =
+            _serviceProvider.GetRequiredService<ProviderSelectionDialog>();
+
         // Show the provider selection dialog as a modal child window
-        _providerSelectionDialog.Owner = this;
-        var result = _providerSelectionDialog.ShowDialog();
+        providerSelectionDialog.Owner = this;
+        var result = providerSelectionDialog.ShowDialog();
 
         if (result == true)
         {
             // Get the selected provider account from the ProviderSelectionViewModel
-            var viewModel = _providerSelectionDialog.DataContext as ProviderSelectionViewModel;
+            var viewModel = providerSelectionDialog.DataContext as ProviderSelectionViewModel;
             if (viewModel?.SelectedAccount != null)
             {
                 // Update the selected provider in the configuration dialog

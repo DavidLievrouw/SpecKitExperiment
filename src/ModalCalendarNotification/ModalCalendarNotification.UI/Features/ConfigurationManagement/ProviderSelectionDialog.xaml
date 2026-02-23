@@ -4,12 +4,13 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   Title="Select Provider"
   Width="360"
-  Height="220"
+  Height="260"
   WindowStartupLocation="CenterOwner"
   ResizeMode="NoResize"
 >
   <Grid Margin="16">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -32,11 +33,13 @@
       Text="{Binding AccountLabel, UpdateSourceTrigger=PropertyChanged}"
     />
 
+    <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
     <Button
-      Grid.Row="4"
+      Grid.Row="5"
       HorizontalAlignment="Right"
       Width="90"
-      Content="Save"
+      Content="Connect"
       Command="{Binding ConfirmCommand}"
     />
   </Grid>

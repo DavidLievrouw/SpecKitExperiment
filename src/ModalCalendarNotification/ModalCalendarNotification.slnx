@@ -5,9 +5,13 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Assets/">
+    <File Path="AZURE_AD_SETUP.md" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
+    <File Path="../../specs/001-modal-calendar-notification/plan.md" />
+    <File Path="../../specs/001-modal-calendar-notification/spec.md" />
     <File Path=".editorconfig" />
+    <File Path="README.md" />
   </Folder>
   <Project Path="ModalCalendarNotification.CalendarProviders/ModalCalendarNotification.CalendarProviders.csproj" />
   <Project Path="ModalCalendarNotification.Core/ModalCalendarNotification.Core.csproj" />
