@@ -5,7 +5,8 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Assets/">
-    <File Path="../../Directory.Packages.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="ModalCalendarNotification.CalendarProviders/ModalCalendarNotification.CalendarProviders.csproj" />
