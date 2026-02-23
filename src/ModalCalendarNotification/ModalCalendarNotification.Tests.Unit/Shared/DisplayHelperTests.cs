@@ -9,7 +9,7 @@ public sealed class DisplayHelperTests
     [Fact]
     public void GetPrimaryDisplay_ReturnsPrimaryDisplayMetadata()
     {
-        DisplayInfo display = DisplayHelper.GetPrimaryDisplay();
+        var display = DisplayHelper.GetPrimaryDisplay();
 
         display.IsPrimary.ShouldBeTrue();
         display.Width.ShouldBeGreaterThan(0);
@@ -19,8 +19,8 @@ public sealed class DisplayHelperTests
     [Fact]
     public void GetPrimaryDisplayCenter_ReturnsPointInsideDisplay()
     {
-        DisplayInfo display = DisplayHelper.GetPrimaryDisplay();
-        DisplayPoint center = DisplayHelper.GetPrimaryDisplayCenter();
+        var display = DisplayHelper.GetPrimaryDisplay();
+        var center = DisplayHelper.GetPrimaryDisplayCenter();
 
         center.X.ShouldBeInRange(0, display.Width);
         center.Y.ShouldBeInRange(0, display.Height);

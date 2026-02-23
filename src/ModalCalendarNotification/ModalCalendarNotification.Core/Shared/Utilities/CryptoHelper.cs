@@ -20,14 +20,14 @@ public static class CryptoHelper
     public static string ProtectString(string plaintext)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plaintext);
-        byte[] bytes = Encoding.UTF8.GetBytes(plaintext);
+        var bytes = Encoding.UTF8.GetBytes(plaintext);
         return Convert.ToBase64String(Protect(bytes));
     }
 
     public static string UnprotectString(string ciphertext)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ciphertext);
-        byte[] bytes = Convert.FromBase64String(ciphertext);
+        var bytes = Convert.FromBase64String(ciphertext);
         return Encoding.UTF8.GetString(Unprotect(bytes));
     }
 }

@@ -11,8 +11,8 @@ public sealed class CryptoHelperTests
     {
         const string plaintext = "super-secret-token";
 
-        string encrypted = CryptoHelper.ProtectString(plaintext);
-        string decrypted = CryptoHelper.UnprotectString(encrypted);
+        var encrypted = CryptoHelper.ProtectString(plaintext);
+        var decrypted = CryptoHelper.UnprotectString(encrypted);
 
         decrypted.ShouldBe(plaintext);
         encrypted.ShouldNotBe(plaintext);

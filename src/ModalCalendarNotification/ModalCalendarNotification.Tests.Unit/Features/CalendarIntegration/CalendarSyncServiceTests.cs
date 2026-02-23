@@ -10,7 +10,7 @@ public sealed class CalendarSyncServiceTests
     [Fact]
     public async Task SyncUpcomingEventsAsync_CombinesAndSortsEvents()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var provider1 = new FakeProvider([
             new CalendarEvent
             {
@@ -35,9 +35,10 @@ public sealed class CalendarSyncServiceTests
         ]);
         var sut = new CalendarSyncService([provider1, provider2]);
 
-        IReadOnlyList<CalendarEvent> events = await sut.SyncUpcomingEventsAsync(
+        var events = await sut.SyncUpcomingEventsAsync(
             now,
-            now.AddHours(1)
+            now.AddHours(1),
+            TestContext.Current.CancellationToken
         );
 
         events.Count.ShouldBe(2);

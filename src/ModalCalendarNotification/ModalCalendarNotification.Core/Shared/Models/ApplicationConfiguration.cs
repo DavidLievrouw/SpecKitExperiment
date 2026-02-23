@@ -1,3 +1,5 @@
+using ModalCalendarNotification.Core.Features.ConfigurationManagement;
+
 namespace ModalCalendarNotification.Core.Shared.Models;
 
 public sealed record ApplicationConfiguration
@@ -11,4 +13,6 @@ public sealed record ApplicationConfiguration
     public string ActiveProvider { get; init; } = "Outlook365";
 
     public bool IsStartupRecoveryEnabled { get; init; } = true;
+
+    public IReadOnlyList<ProviderAccountItem> ProviderAccounts { get; init; } = [];
 }

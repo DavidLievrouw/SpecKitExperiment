@@ -22,7 +22,7 @@ public sealed class OutlookEventMapperTests
             false
         );
 
-        CalendarEvent mapped = OutlookEventMapper.Map(source);
+        var mapped = OutlookEventMapper.Map(source);
         var expected = new CalendarEvent
         {
             Id = source.Id,
@@ -36,7 +36,7 @@ public sealed class OutlookEventMapperTests
             IsAllDay = source.IsAllDay,
         };
 
-        ComparisonResult? comparison = new CompareLogic().Compare(expected, mapped);
+        var comparison = new CompareLogic().Compare(expected, mapped);
         comparison.AreEqual.ShouldBeTrue();
     }
 }

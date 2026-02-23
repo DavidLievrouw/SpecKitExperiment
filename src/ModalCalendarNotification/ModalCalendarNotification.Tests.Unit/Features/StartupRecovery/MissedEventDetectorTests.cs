@@ -10,7 +10,7 @@ public sealed class MissedEventDetectorTests
     [Fact]
     public void DetectMissedEvents_Respects24HourLookback()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var detector = new MissedEventDetector();
 
         var events = new List<CalendarEvent>
@@ -44,7 +44,7 @@ public sealed class MissedEventDetectorTests
             },
         };
 
-        IReadOnlyList<CalendarEvent> missed = detector.DetectMissedEvents(events, null, now);
+        var missed = detector.DetectMissedEvents(events, null, now);
 
         missed.Count.ShouldBe(1);
         missed[0].Id.ShouldBe("missed");

@@ -22,7 +22,7 @@ public sealed class GoogleEventMapperTests
             false
         );
 
-        CalendarEvent mapped = GoogleEventMapper.Map(source);
+        var mapped = GoogleEventMapper.Map(source);
         var expected = new CalendarEvent
         {
             Id = source.Id,
@@ -36,7 +36,7 @@ public sealed class GoogleEventMapperTests
             IsAllDay = source.IsAllDay,
         };
 
-        ComparisonResult? comparison = new CompareLogic().Compare(expected, mapped);
+        var comparison = new CompareLogic().Compare(expected, mapped);
         comparison.AreEqual.ShouldBeTrue();
     }
 }

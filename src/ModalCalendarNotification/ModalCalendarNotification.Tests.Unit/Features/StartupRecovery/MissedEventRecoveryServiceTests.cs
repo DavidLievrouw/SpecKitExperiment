@@ -10,7 +10,7 @@ public sealed class MissedEventRecoveryServiceTests
     [Fact]
     public async Task RecoverMissedEventsAsync_DetectsAndUpdatesLastRun()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var repo = new InMemoryApplicationStateRepository(now.AddHours(-3));
         var detector = new MissedEventDetector();
         var sut = new MissedEventRecoveryService(repo, detector);
@@ -37,10 +37,14 @@ public sealed class MissedEventRecoveryServiceTests
             },
         };
 
-        IReadOnlyList<CalendarEvent> missed = await sut.RecoverMissedEventsAsync(events, now);
+        var missed = await sut.RecoverMissedEventsAsync(
+            events,
+            now,
+            TestContext.Current.CancellationToken
+        );
 
         missed.Count.ShouldBe(1);
-        (await repo.GetLastRunUtcAsync()).ShouldBe(now);
+        (await repo.GetLastRunUtcAsync(TestContext.Current.CancellationToken)).ShouldBe(now);
     }
 
     private sealed class InMemoryApplicationStateRepository : IApplicationStateRepository

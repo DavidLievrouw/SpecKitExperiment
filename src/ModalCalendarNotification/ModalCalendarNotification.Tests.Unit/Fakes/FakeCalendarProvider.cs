@@ -21,9 +21,7 @@ public sealed class FakeCalendarProvider : ICalendarProvider
         CancellationToken cancellationToken = default
     )
     {
-        List<CalendarEvent> filtered = _events
-            .Where(x => x.StartUtc >= fromUtc && x.StartUtc <= toUtc)
-            .ToList();
+        var filtered = _events.Where(x => x.StartUtc >= fromUtc && x.StartUtc <= toUtc).ToList();
 
         return Task.FromResult<IReadOnlyList<CalendarEvent>>(filtered);
     }

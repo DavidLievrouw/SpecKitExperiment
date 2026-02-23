@@ -14,10 +14,10 @@ public sealed class ApplicationStateRepositoryTests
     {
         await using var fixture = await SqliteFixture.CreateAsync();
         var sut = new ApplicationStateRepository(fixture.DbContext);
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
-        await sut.SetLastRunUtcAsync(now);
-        DateTimeOffset? loaded = await sut.GetLastRunUtcAsync();
+        await sut.SetLastRunUtcAsync(now, TestContext.Current.CancellationToken);
+        var loaded = await sut.GetLastRunUtcAsync(TestContext.Current.CancellationToken);
 
         loaded.ShouldNotBeNull();
         loaded.Value.ShouldBe(now);
@@ -46,9 +46,7 @@ public sealed class ApplicationStateRepositoryTests
             var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
 
-            DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(connection)
-                .Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
 
             var context = new AppDbContext(options);
             await context.Database.EnsureCreatedAsync();

@@ -1,6 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Data;
 using ModalCalendarNotification.Data.Features.DismissedEventsManagement;
 using Shouldly;
@@ -16,9 +15,11 @@ public sealed class DismissedEventTitleRepositoryTests
         await using var fixture = await SqliteFixture.CreateAsync();
         var sut = new DismissedEventTitleRepository(fixture.DbContext);
 
-        await sut.AddAsync("Daily Standup");
+        await sut.AddAsync("Daily Standup", TestContext.Current.CancellationToken);
 
-        (await sut.ExistsAsync("daily standup")).ShouldBeTrue();
+        (
+            await sut.ExistsAsync("daily standup", TestContext.Current.CancellationToken)
+        ).ShouldBeTrue();
     }
 
     [Fact]
@@ -27,10 +28,10 @@ public sealed class DismissedEventTitleRepositoryTests
         await using var fixture = await SqliteFixture.CreateAsync();
         var sut = new DismissedEventTitleRepository(fixture.DbContext);
 
-        await sut.AddAsync("Planning");
-        await sut.RemoveAsync("PLANNING");
+        await sut.AddAsync("Planning", TestContext.Current.CancellationToken);
+        await sut.RemoveAsync("PLANNING", TestContext.Current.CancellationToken);
 
-        (await sut.ExistsAsync("planning")).ShouldBeFalse();
+        (await sut.ExistsAsync("planning", TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 
     [Fact]
@@ -39,10 +40,10 @@ public sealed class DismissedEventTitleRepositoryTests
         await using var fixture = await SqliteFixture.CreateAsync();
         var sut = new DismissedEventTitleRepository(fixture.DbContext);
 
-        await sut.AddAsync("Event A");
-        await sut.AddAsync("Event B");
+        await sut.AddAsync("Event A", TestContext.Current.CancellationToken);
+        await sut.AddAsync("Event B", TestContext.Current.CancellationToken);
 
-        IReadOnlyList<DismissedEventTitle> all = await sut.GetAllAsync();
+        var all = await sut.GetAllAsync(TestContext.Current.CancellationToken);
 
         all.Count.ShouldBe(2);
     }
@@ -70,9 +71,7 @@ public sealed class DismissedEventTitleRepositoryTests
             var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
 
-            DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(connection)
-                .Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
 
             var context = new AppDbContext(options);
             await context.Database.EnsureCreatedAsync();

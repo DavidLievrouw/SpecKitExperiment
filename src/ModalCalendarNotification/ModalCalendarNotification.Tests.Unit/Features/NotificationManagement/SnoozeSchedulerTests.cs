@@ -10,10 +10,10 @@ public sealed class SnoozeSchedulerTests
     [Fact]
     public void CalculateNextTrigger_AddsSnoozeDuration()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var sut = new SnoozeScheduler(new AppTimeProvider());
 
-        DateTimeOffset next = sut.CalculateNextTrigger(now, 5);
+        var next = sut.CalculateNextTrigger(now, 5);
 
         next.ShouldBe(now.AddMinutes(5));
     }

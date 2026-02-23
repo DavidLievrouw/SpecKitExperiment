@@ -21,7 +21,7 @@ public sealed class SnoozeScheduler
         CancellationToken cancellationToken = default
     )
     {
-        TimeSpan delay = triggerUtc - _timeProvider.UtcNow;
+        var delay = triggerUtc - _timeProvider.UtcNow;
         if (delay < TimeSpan.Zero)
         {
             delay = TimeSpan.Zero;

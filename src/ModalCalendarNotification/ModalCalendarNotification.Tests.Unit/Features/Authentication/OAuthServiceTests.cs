@@ -12,7 +12,11 @@ public sealed class OAuthServiceTests
         var tokenClient = new FakeMsalTokenClient("token-123");
         var sut = new OAuthService(tokenClient);
 
-        string token = await sut.AcquireAccessTokenAsync("Outlook365", ["Calendars.Read"]);
+        var token = await sut.AcquireAccessTokenAsync(
+            "Outlook365",
+            ["Calendars.Read"],
+            TestContext.Current.CancellationToken
+        );
 
         token.ShouldBe("token-123");
     }

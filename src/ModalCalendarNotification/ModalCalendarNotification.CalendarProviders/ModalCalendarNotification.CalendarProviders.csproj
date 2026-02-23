@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Calendar.v3" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Identity.Client" />
     <PackageReference Include="Polly" />
   </ItemGroup>

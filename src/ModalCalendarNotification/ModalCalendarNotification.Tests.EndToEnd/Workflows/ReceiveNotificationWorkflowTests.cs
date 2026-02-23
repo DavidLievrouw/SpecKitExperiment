@@ -1,5 +1,4 @@
 using ModalCalendarNotification.Core.Features.NotificationManagement;
-using ModalCalendarNotification.Core.Shared.Models;
 using ModalCalendarNotification.Tests.EndToEnd.TestHarness;
 using Shouldly;
 using Xunit;
@@ -15,14 +14,11 @@ public sealed class ReceiveNotificationWorkflowTests
         host.Start();
 
         var modal = new ModalWindowSimulator();
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        CalendarEvent[] events = new[]
-        {
-            MockCalendarEventGenerator.CreateUpcoming("1", "Standup", 2),
-        };
+        var now = DateTimeOffset.UtcNow;
+        var events = new[] { MockCalendarEventGenerator.CreateUpcoming("1", "Standup", 2) };
 
         var engine = new NotificationEngine();
-        IReadOnlyList<Notification> notifications = engine.BuildNotifications(events, now, 3);
+        var notifications = engine.BuildNotifications(events, now, 3);
 
         modal.Show(notifications);
 

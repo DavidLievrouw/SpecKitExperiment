@@ -16,8 +16,8 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
-        string normalized = title.Trim();
-        bool exists = await ExistsAsync(normalized, cancellationToken);
+        var normalized = title.Trim();
+        var exists = await ExistsAsync(normalized, cancellationToken);
         if (exists)
         {
             return;
@@ -37,7 +37,7 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     public async Task<bool> ExistsAsync(string title, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        string normalized = title.Trim().ToLowerInvariant();
+        var normalized = title.Trim().ToLowerInvariant();
 
         return await _dbContext.DismissedEventTitles.AnyAsync(
             x => x.Title.ToLower() == normalized,
@@ -62,9 +62,9 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     public async Task RemoveAsync(string title, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        string normalized = title.Trim().ToLowerInvariant();
+        var normalized = title.Trim().ToLowerInvariant();
 
-        List<DismissedEventTitleEntity> entities = await _dbContext
+        var entities = await _dbContext
             .DismissedEventTitles.Where(x => x.Title.ToLower() == normalized)
             .ToListAsync(cancellationToken);
 

@@ -36,12 +36,10 @@ public sealed class CalendarSelectionRepository : ICalendarSelectionRepository
     {
         ArgumentNullException.ThrowIfNull(selectedCalendars);
 
-        List<SelectedCalendarEntity> existing = await _dbContext.SelectedCalendars.ToListAsync(
-            cancellationToken
-        );
+        var existing = await _dbContext.SelectedCalendars.ToListAsync(cancellationToken);
         _dbContext.SelectedCalendars.RemoveRange(existing);
 
-        foreach (SelectedCalendar selectedCalendar in selectedCalendars)
+        foreach (var selectedCalendar in selectedCalendars)
         {
             _dbContext.SelectedCalendars.Add(
                 new SelectedCalendarEntity

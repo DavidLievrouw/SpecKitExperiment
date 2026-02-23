@@ -22,14 +22,8 @@ public sealed class MissedEventRecoveryService
         CancellationToken cancellationToken = default
     )
     {
-        DateTimeOffset? lastRun = await _applicationStateRepository.GetLastRunUtcAsync(
-            cancellationToken
-        );
-        IReadOnlyList<CalendarEvent> missed = _missedEventDetector.DetectMissedEvents(
-            latestEvents,
-            lastRun,
-            nowUtc
-        );
+        var lastRun = await _applicationStateRepository.GetLastRunUtcAsync(cancellationToken);
+        var missed = _missedEventDetector.DetectMissedEvents(latestEvents, lastRun, nowUtc);
 
         await _applicationStateRepository.SetLastRunUtcAsync(nowUtc, cancellationToken);
         return missed;

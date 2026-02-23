@@ -17,7 +17,7 @@ public sealed class ApplicationStateRepository : IApplicationStateRepository
         CancellationToken cancellationToken = default
     )
     {
-        ApplicationStateEntity? entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
+        var entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
             x => x.Key == LastRunKey,
             cancellationToken
         );
@@ -27,7 +27,7 @@ public sealed class ApplicationStateRepository : IApplicationStateRepository
             return null;
         }
 
-        return DateTimeOffset.TryParse(entity.Value, out DateTimeOffset parsed) ? parsed : null;
+        return DateTimeOffset.TryParse(entity.Value, out var parsed) ? parsed : null;
     }
 
     public async Task SetLastRunUtcAsync(
@@ -35,7 +35,7 @@ public sealed class ApplicationStateRepository : IApplicationStateRepository
         CancellationToken cancellationToken = default
     )
     {
-        ApplicationStateEntity? entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
+        var entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
             x => x.Key == LastRunKey,
             cancellationToken
         );

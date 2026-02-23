@@ -15,7 +15,7 @@ public static class Program
         ConfigureLogging();
         Log.Information("Application bootstrap starting");
 
-        IConfiguration configuration = BuildConfiguration();
+        var configuration = BuildConfiguration();
         var services = new ServiceCollection();
 
         ServiceConfiguration.Configure(services, configuration);
@@ -42,7 +42,7 @@ public static class Program
             return;
         }
 
-        var mutex = new Mutex(true, SingleInstanceMutexName, out bool createdNew);
+        var mutex = new Mutex(true, SingleInstanceMutexName, out var createdNew);
 
         if (!createdNew)
         {

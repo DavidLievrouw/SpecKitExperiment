@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ModalCalendarNotification.CalendarProviders;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
+using Serilog;
 using AppTimeProvider = ModalCalendarNotification.Core.Shared.Utilities.TimeProvider;
 
 namespace ModalCalendarNotification;
@@ -17,10 +19,19 @@ public static class ServiceConfiguration
         services.AddSingleton(configuration);
         services.AddSingleton<AppTimeProvider>();
 
+        // Logging
+        services.AddSingleton(Log.Logger);
+
         // Configuration Management
         services.AddSingleton<IConfigurationService, ConfigurationService>();
         services.AddSingleton<ConfigurationDialogViewModel>();
         services.AddSingleton<ConfigurationDialog>();
+        services.AddTransient<ProviderSelectionViewModel>();
+        services.AddTransient<ProviderSelectionDialog>();
+
+        // Calendar Providers
+        services.AddSingleton<OutlookCalendarProvider>();
+        services.AddSingleton<GoogleCalendarProvider>();
 
         // System Tray
         services.AddSingleton<SystemTrayViewModel>();

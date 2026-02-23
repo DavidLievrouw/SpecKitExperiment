@@ -9,7 +9,7 @@ public static class DisplayHelper
 
     public static DisplayPoint GetPrimaryDisplayCenter()
     {
-        DisplayInfo display = GetPrimaryDisplay();
+        var display = GetPrimaryDisplay();
         return new DisplayPoint(display.Width / 2, display.Height / 2);
     }
 }

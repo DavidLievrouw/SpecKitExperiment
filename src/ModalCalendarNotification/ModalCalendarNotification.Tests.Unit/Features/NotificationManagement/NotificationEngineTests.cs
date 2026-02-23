@@ -12,7 +12,7 @@ public sealed class NotificationEngineTests
     [Fact]
     public void BuildNotifications_FiltersByLeadTimeWindow()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var events = new List<CalendarEvent>
         {
             new()
@@ -36,7 +36,7 @@ public sealed class NotificationEngineTests
         };
 
         var sut = new NotificationEngine();
-        IReadOnlyList<Notification> notifications = sut.BuildNotifications(events, now, 3);
+        var notifications = sut.BuildNotifications(events, now, 3);
 
         notifications.Count.ShouldBe(1);
         notifications[0].EventId.ShouldBe("1");
@@ -45,7 +45,7 @@ public sealed class NotificationEngineTests
     [Fact]
     public void BuildNotifications_FiltersDismissedTitles()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var events = new List<CalendarEvent>
         {
             new()
@@ -71,7 +71,7 @@ public sealed class NotificationEngineTests
         var repo = new FakeDismissedTitleRepository(["daily standup"]);
         var sut = new NotificationEngine(repo);
 
-        IReadOnlyList<Notification> notifications = sut.BuildNotifications(events, now, 3);
+        var notifications = sut.BuildNotifications(events, now, 3);
 
         notifications.Count.ShouldBe(1);
         notifications[0].Title.ShouldBe("Product Review");
@@ -80,7 +80,7 @@ public sealed class NotificationEngineTests
     [Fact]
     public void BuildNotifications_RespectsSelectedCalendars()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var events = new List<CalendarEvent>
         {
             new()
@@ -116,7 +116,7 @@ public sealed class NotificationEngineTests
 
         var sut = new NotificationEngine(dismissed, selectedCalendars);
 
-        IReadOnlyList<Notification> notifications = sut.BuildNotifications(events, now, 3);
+        var notifications = sut.BuildNotifications(events, now, 3);
 
         notifications.Count.ShouldBe(1);
         notifications[0].EventId.ShouldBe("1");
@@ -147,7 +147,7 @@ public sealed class NotificationEngineTests
 
         public Task<bool> ExistsAsync(string title, CancellationToken cancellationToken = default)
         {
-            bool exists = _items.Any(x =>
+            var exists = _items.Any(x =>
                 string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)
             );
             return Task.FromResult(exists);

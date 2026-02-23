@@ -20,15 +20,11 @@ public sealed class CalendarSyncService
     {
         var allEvents = new List<CalendarEvent>();
 
-        foreach (ICalendarProviderAdapter provider in _providers)
+        foreach (var provider in _providers)
         {
             try
             {
-                IReadOnlyList<CalendarEvent> events = await provider.GetEventsAsync(
-                    fromUtc,
-                    toUtc,
-                    cancellationToken
-                );
+                var events = await provider.GetEventsAsync(fromUtc, toUtc, cancellationToken);
                 allEvents.AddRange(events);
             }
             catch (Exception ex)

@@ -22,8 +22,7 @@ public partial class CalendarListViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadAsync()
     {
-        IReadOnlyList<SelectedCalendar> selections =
-            await _calendarSelectionRepository.GetSelectedAsync();
+        var selections = await _calendarSelectionRepository.GetSelectedAsync();
         Items = selections
             .Select(x => new CalendarSelectionItem(
                 x.ProviderName,
@@ -37,7 +36,7 @@ public partial class CalendarListViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
-        List<SelectedCalendar> selected = Items
+        var selected = Items
             .Select(x => new SelectedCalendar
             {
                 ProviderName = x.ProviderName,

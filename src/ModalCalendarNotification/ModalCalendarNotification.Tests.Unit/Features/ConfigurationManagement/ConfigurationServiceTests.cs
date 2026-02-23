@@ -10,7 +10,7 @@ public sealed class ConfigurationServiceTests
     [Fact]
     public async Task SaveAndLoad_PersistsConfigurationValues()
     {
-        string path = Path.Combine(Path.GetTempPath(), $"modal-config-{Guid.NewGuid():N}.json");
+        var path = Path.Combine(Path.GetTempPath(), $"modal-config-{Guid.NewGuid():N}.json");
         var sut = new ConfigurationService(path);
 
         var expected = new ApplicationConfiguration
@@ -20,8 +20,8 @@ public sealed class ConfigurationServiceTests
             ActiveProvider = "GoogleCalendar",
         };
 
-        await sut.SaveAsync(expected);
-        ApplicationConfiguration actual = await sut.LoadAsync();
+        await sut.SaveAsync(expected, TestContext.Current.CancellationToken);
+        var actual = await sut.LoadAsync(TestContext.Current.CancellationToken);
 
         actual.NotificationLeadTimeMinutes.ShouldBe(7);
         actual.AutoDismissTimeoutSeconds.ShouldBe(45);

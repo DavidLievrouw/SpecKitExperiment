@@ -12,7 +12,11 @@ public sealed class TokenRefreshOrchestratorTests
         var authService = new StubAuthenticationService("refreshed-token");
         var sut = new TokenRefreshOrchestrator(authService);
 
-        string token = await sut.RefreshTokenAsync("GoogleCalendar", ["scope"]);
+        var token = await sut.RefreshTokenAsync(
+            "GoogleCalendar",
+            ["scope"],
+            TestContext.Current.CancellationToken
+        );
 
         token.ShouldBe("refreshed-token");
     }

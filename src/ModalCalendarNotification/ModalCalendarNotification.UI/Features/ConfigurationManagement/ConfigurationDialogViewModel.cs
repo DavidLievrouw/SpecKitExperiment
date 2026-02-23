@@ -37,7 +37,7 @@ public partial class ConfigurationDialogViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadAsync()
     {
-        ApplicationConfiguration config = await _configurationService.LoadAsync();
+        var config = await _configurationService.LoadAsync();
         NotificationLeadTimeMinutes = config.NotificationLeadTimeMinutes;
         AutoDismissTimeoutSeconds = config.AutoDismissTimeoutSeconds;
         SelectedProvider = config.ActiveProvider;

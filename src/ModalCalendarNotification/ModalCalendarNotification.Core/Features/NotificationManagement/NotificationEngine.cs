@@ -34,7 +34,7 @@ public sealed class NotificationEngine : INotificationEngine
     {
         var stopwatch = Stopwatch.StartNew();
 
-        HashSet<string> dismissedTitles = _dismissedEventTitleRepository is null
+        var dismissedTitles = _dismissedEventTitleRepository is null
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             : _dismissedEventTitleRepository
                 .GetAllAsync()
@@ -43,7 +43,7 @@ public sealed class NotificationEngine : INotificationEngine
                 .Select(x => x.Title)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        HashSet<string> selectedCalendarKeys = _calendarSelectionRepository is null
+        var selectedCalendarKeys = _calendarSelectionRepository is null
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             : _calendarSelectionRepository
                 .GetSelectedAsync()
@@ -53,11 +53,11 @@ public sealed class NotificationEngine : INotificationEngine
                 .Select(x => BuildCalendarKey(x.ProviderName, x.CalendarId))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        bool enforceCalendarSelection = selectedCalendarKeys.Count > 0;
+        var enforceCalendarSelection = selectedCalendarKeys.Count > 0;
 
-        DateTimeOffset cutoff = nowUtc.AddMinutes(leadTimeMinutes);
+        var cutoff = nowUtc.AddMinutes(leadTimeMinutes);
 
-        List<Notification> notifications = events
+        var notifications = events
             .Where(x =>
                 !dismissedTitles.Contains(x.Title)
                 && (

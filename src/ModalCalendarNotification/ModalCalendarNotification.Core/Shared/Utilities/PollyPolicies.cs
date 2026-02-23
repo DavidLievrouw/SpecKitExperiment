@@ -11,10 +11,10 @@ public static class PollyPolicies
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        TimeSpan delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
+        var delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
         Exception? lastException = null;
 
-        for (int attempt = 1; attempt <= maxRetryAttempts; attempt++)
+        for (var attempt = 1; attempt <= maxRetryAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -51,10 +51,10 @@ public static class PollyPolicies
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        TimeSpan delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
+        var delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
         Exception? lastException = null;
 
-        for (int attempt = 1; attempt <= maxRetryAttempts; attempt++)
+        for (var attempt = 1; attempt <= maxRetryAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

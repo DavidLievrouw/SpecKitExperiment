@@ -9,7 +9,7 @@ public sealed class PollyPoliciesTests
     [Fact]
     public async Task ExecuteWithRetryAsync_RetriesAndEventuallySucceeds()
     {
-        int attempts = 0;
+        var attempts = 0;
 
         await PollyPolicies.ExecuteWithRetryAsync(
             async _ =>
@@ -22,7 +22,8 @@ public sealed class PollyPoliciesTests
                 }
             },
             3,
-            TimeSpan.FromMilliseconds(1)
+            TimeSpan.FromMilliseconds(1),
+            TestContext.Current.CancellationToken
         );
 
         attempts.ShouldBe(3);
@@ -31,7 +32,7 @@ public sealed class PollyPoliciesTests
     [Fact]
     public async Task ExecuteWithTimeoutAsync_ThrowsWhenOperationExceedsTimeout()
     {
-        TimeSpan timeout = TimeSpan.FromMilliseconds(10);
+        var timeout = TimeSpan.FromMilliseconds(10);
 
         await Should.ThrowAsync<OperationCanceledException>(async () =>
             await PollyPolicies.ExecuteWithTimeoutAsync(

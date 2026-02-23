@@ -9,8 +9,8 @@ public sealed class AutoDismissWorkflowTests
     [Fact]
     public void AutoDismissWorkflow_DismissesUntouchedModalAfterTimeout()
     {
-        DateTimeOffset shown = DateTimeOffset.UtcNow;
-        DateTimeOffset now = shown.AddSeconds(61);
+        var shown = DateTimeOffset.UtcNow;
+        var now = shown.AddSeconds(61);
         var handler = new AutoDismissHandler();
 
         handler.ShouldAutoDismiss(shown, now, 60).ShouldBeTrue();

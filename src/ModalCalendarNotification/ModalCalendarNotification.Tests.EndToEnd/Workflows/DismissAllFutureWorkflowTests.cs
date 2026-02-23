@@ -12,7 +12,7 @@ public sealed class DismissAllFutureWorkflowTests
     [Fact]
     public async Task DismissAllFutureWorkflow_FiltersFutureNotificationsByTitle()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var repository = new InMemoryDismissedTitleRepository();
         var viewModel = new NotificationModalViewModel(repository)
         {
@@ -52,7 +52,7 @@ public sealed class DismissAllFutureWorkflowTests
             },
         };
 
-        IReadOnlyList<Notification> notifications = engine.BuildNotifications(upcoming, now, 3);
+        var notifications = engine.BuildNotifications(upcoming, now, 3);
 
         notifications.Count.ShouldBe(1);
         notifications[0].Title.ShouldBe("Architecture Review");

@@ -11,9 +11,9 @@ public sealed class SnoozeWorkflowTests
     public void SnoozeWorkflow_RecalculatesTriggerTime()
     {
         var scheduler = new SnoozeScheduler(new AppTimeProvider());
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
-        DateTimeOffset next = scheduler.CalculateNextTrigger(now, 5);
+        var next = scheduler.CalculateNextTrigger(now, 5);
 
         next.ShouldBe(now.AddMinutes(5));
     }

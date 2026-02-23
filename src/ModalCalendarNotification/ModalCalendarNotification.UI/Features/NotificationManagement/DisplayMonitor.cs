@@ -10,7 +10,7 @@ public sealed class DisplayMonitor
 
     public void Refresh()
     {
-        DisplayInfo latest = DisplayHelper.GetPrimaryDisplay();
+        var latest = DisplayHelper.GetPrimaryDisplay();
         if (latest != CurrentPrimaryDisplay)
         {
             CurrentPrimaryDisplay = latest;

@@ -44,7 +44,7 @@ public sealed class SystemTrayManager : IDisposable
 
         try
         {
-            ImageSource iconSource = GetApplicationIcon();
+            var iconSource = GetApplicationIcon();
 
             _taskbarIcon = new TaskbarIcon
             {
@@ -169,7 +169,7 @@ public sealed class SystemTrayManager : IDisposable
     {
         // Create a DrawingVisual to render the drawing
         var drawingVisual = new DrawingVisual();
-        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+        using (var drawingContext = drawingVisual.RenderOpen())
         {
             drawingContext.DrawDrawing(drawingImage.Drawing);
         }
@@ -226,7 +226,7 @@ public sealed class SystemTrayManager : IDisposable
 
         var bitmap = new WriteableBitmap(32, 32, 96, 96, PixelFormats.Bgra32, null);
         var pixels = new byte[32 * 32 * 4];
-        for (int i = 0; i < pixels.Length; i += 4)
+        for (var i = 0; i < pixels.Length; i += 4)
         {
             pixels[i] = 255; // B
             pixels[i + 1] = 255; // G

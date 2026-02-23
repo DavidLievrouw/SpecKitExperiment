@@ -16,24 +16,27 @@ public sealed class CalendarSelectionRepositoryTests
         await using var fixture = await SqliteFixture.CreateAsync();
         var sut = new CalendarSelectionRepository(fixture.DbContext);
 
-        await sut.SaveSelectedAsync([
-            new SelectedCalendar
-            {
-                ProviderName = "Outlook365",
-                CalendarId = "primary",
-                DisplayName = "Primary",
-                IsSelected = true,
-            },
-            new SelectedCalendar
-            {
-                ProviderName = "GoogleCalendar",
-                CalendarId = "team",
-                DisplayName = "Team",
-                IsSelected = false,
-            },
-        ]);
+        await sut.SaveSelectedAsync(
+            [
+                new SelectedCalendar
+                {
+                    ProviderName = "Outlook365",
+                    CalendarId = "primary",
+                    DisplayName = "Primary",
+                    IsSelected = true,
+                },
+                new SelectedCalendar
+                {
+                    ProviderName = "GoogleCalendar",
+                    CalendarId = "team",
+                    DisplayName = "Team",
+                    IsSelected = false,
+                },
+            ],
+            TestContext.Current.CancellationToken
+        );
 
-        IReadOnlyList<SelectedCalendar> selected = await sut.GetSelectedAsync();
+        var selected = await sut.GetSelectedAsync(TestContext.Current.CancellationToken);
 
         selected.Count.ShouldBe(2);
         selected.Single(x => x.CalendarId == "primary").IsSelected.ShouldBeTrue();
@@ -62,9 +65,7 @@ public sealed class CalendarSelectionRepositoryTests
             var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
 
-            DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(connection)
-                .Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
 
             var context = new AppDbContext(options);
             await context.Database.EnsureCreatedAsync();

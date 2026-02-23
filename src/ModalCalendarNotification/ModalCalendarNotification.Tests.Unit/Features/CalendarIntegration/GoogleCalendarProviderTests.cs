@@ -1,5 +1,5 @@
+using FakeItEasy;
 using ModalCalendarNotification.CalendarProviders;
-using ModalCalendarNotification.Core.Shared.Models;
 using Shouldly;
 using Xunit;
 
@@ -11,11 +11,13 @@ public sealed class GoogleCalendarProviderTests
     public async Task GetEventsAsync_AcquiresAccessToken()
     {
         var auth = new CapturingAuthenticationService();
-        var sut = new GoogleCalendarProvider(auth);
+        var logger = A.Fake<Microsoft.Extensions.Logging.ILogger<CapturingAuthenticationService>>();
+        var sut = new GoogleCalendarProvider(auth, logger);
 
-        IReadOnlyList<CalendarEvent> events = await sut.GetEventsAsync(
+        var events = await sut.GetEventsAsync(
             DateTimeOffset.UtcNow,
-            DateTimeOffset.UtcNow.AddHours(1)
+            DateTimeOffset.UtcNow.AddHours(1),
+            TestContext.Current.CancellationToken
         );
 
         auth.CallCount.ShouldBe(1);

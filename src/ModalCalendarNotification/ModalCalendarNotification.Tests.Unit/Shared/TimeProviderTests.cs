@@ -12,9 +12,9 @@ public sealed class TimeProviderTests
     {
         var sut = new AppTimeProvider();
 
-        DateTimeOffset before = DateTimeOffset.UtcNow;
-        DateTimeOffset value = sut.UtcNow;
-        DateTimeOffset after = DateTimeOffset.UtcNow;
+        var before = DateTimeOffset.UtcNow;
+        var value = sut.UtcNow;
+        var after = DateTimeOffset.UtcNow;
 
         value.ShouldBeInRange(before, after);
     }
@@ -23,10 +23,10 @@ public sealed class TimeProviderTests
     public async Task DelayAsync_WaitsAtLeastRequestedTime()
     {
         var sut = new AppTimeProvider();
-        TimeSpan delay = TimeSpan.FromMilliseconds(25);
+        var delay = TimeSpan.FromMilliseconds(25);
 
         var stopwatch = Stopwatch.StartNew();
-        await sut.DelayAsync(delay);
+        await sut.DelayAsync(delay, TestContext.Current.CancellationToken);
         stopwatch.Stop();
 
         (stopwatch.Elapsed >= delay - TimeSpan.FromMilliseconds(10)).ShouldBeTrue();
