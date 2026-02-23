@@ -1,10 +1,13 @@
-<Window x:Class="ModalCalendarNotification.UI.Features.ConfigurationManagement.ConfigurationDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Configuration"
-        Width="540"
-        Height="420"
-        WindowStartupLocation="CenterOwner">
+<Window
+  x:Class="ModalCalendarNotification.UI.Features.ConfigurationManagement.ConfigurationDialog"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Configuration"
+  Width="540"
+  Height="420"
+  WindowStartupLocation="CenterOwner"
+  Loaded="Window_Loaded"
+>
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -16,7 +19,13 @@
         <StackPanel Margin="12">
           <TextBlock Text="Selected Provider" FontWeight="SemiBold" />
           <TextBox Margin="0,8,0,0" Text="{Binding SelectedProvider}" />
-          <Button Margin="0,12,0,0" Width="150" Content="Select Calendars" HorizontalAlignment="Left" Command="{Binding OpenCalendarSelectionCommand}" />
+          <Button
+            Margin="0,12,0,0"
+            Width="150"
+            Content="Select Calendars"
+            HorizontalAlignment="Left"
+            Command="{Binding OpenCalendarSelectionCommand}"
+          />
         </StackPanel>
       </TabItem>
 
@@ -31,7 +40,10 @@
 
       <TabItem Header="Dismissed Events">
         <StackPanel Margin="12">
-          <TextBlock Text="Dismissed recurring event titles can be restored from this tab." TextWrapping="Wrap" />
+          <TextBlock
+            Text="Dismissed recurring event titles can be restored from this tab."
+            TextWrapping="Wrap"
+          />
         </StackPanel>
       </TabItem>
 
