@@ -7,21 +7,21 @@
   <ItemGroup>
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
 
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.62.0" />
     <PackageVersion Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.61.3" />
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.69.0.3667" />
 
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
 
     <PackageVersion Include="Polly" Version="8.2.0" />
     <PackageVersion Include="Polly.Core" Version="8.2.0" />
@@ -36,8 +36,8 @@
 
     <PackageVersion Include="xunit" Version="2.7.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.6" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.2" />
-    <PackageVersion Include="FakeItEasy" Version="8.4.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageVersion Include="FakeItEasy" Version="9.0.0" />
     <PackageVersion Include="Shouldly" Version="4.1.0" />
     <PackageVersion Include="CompareNETObjects" Version="4.81.0" />
   </ItemGroup>

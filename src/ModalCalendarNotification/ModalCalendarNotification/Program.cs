@@ -7,36 +7,32 @@ namespace ModalCalendarNotification;
 
 public static class Program
 {
+    private const string SingleInstanceMutexName = "ModalCalendarNotification.SingleInstance";
     private static Mutex? _singleInstanceMutex;
 
     public static IServiceProvider CreateServiceProvider()
     {
         EnsureSingleInstance();
-
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .WriteTo.Console()
-            .WriteTo.File("logs/modal-calendar-notification-.log", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
-
+        ConfigureLogging();
         Log.Information("Application bootstrap starting");
 
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .Build();
-
+        var configuration = BuildConfiguration();
         var services = new ServiceCollection();
+
         ServiceConfiguration.Configure(services, configuration);
         services.AddSingleton(Log.Logger);
+
         return services.BuildServiceProvider();
     }
 
     public static void ReleaseSingleInstanceLock()
     {
-        _singleInstanceMutex?.ReleaseMutex();
-        _singleInstanceMutex?.Dispose();
-        _singleInstanceMutex = null;
+        if (Interlocked.Exchange(ref _singleInstanceMutex, null) is { } mutex)
+        {
+            mutex.ReleaseMutex();
+            mutex.Dispose();
+        }
+
         Log.CloseAndFlush();
     }
 
@@ -47,11 +43,25 @@ public static class Program
             return;
         }
 
-        _singleInstanceMutex = new Mutex(true, "ModalCalendarNotification.SingleInstance", out var createdNew);
+        var mutex = new Mutex(initiallyOwned: true, name: SingleInstanceMutexName, createdNew: out var createdNew);
 
         if (!createdNew)
         {
+            mutex.Dispose();
             throw new InvalidOperationException("Another instance of ModalCalendarNotification is already running.");
         }
+
+        _singleInstanceMutex = mutex;
     }
+
+    private static IConfiguration BuildConfiguration() => new ConfigurationBuilder()
+        .SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+        .Build();
+
+    private static void ConfigureLogging() => Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        .WriteTo.Console()
+        .WriteTo.File("logs/modal-calendar-notification-.log", rollingInterval: RollingInterval.Day)
+        .CreateLogger();
 }
