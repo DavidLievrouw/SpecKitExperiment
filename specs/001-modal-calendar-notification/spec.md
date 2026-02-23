@@ -31,6 +31,14 @@
 - Q: Notification union behavior → A: Notifications MUST show events from the union of all selected calendars across all configured providers. Users see a single unified notification stream.
 - Q: Configuration dialog capabilities → A: The Settings dialog MUST allow: adding multiple calendar providers (Office365 and/or Google Calendar), managing which calendars are included per provider, removing a provider entirely, and toggling calendars on/off without re-authenticating.
 
+### Session 2026-02-23 (Multiple Accounts & Overlapping Events)
+
+- Q: Multiple accounts per provider type → A: Users MUST be able to configure multiple accounts for the same provider type (e.g., multiple Google Calendar accounts: personal, work, side project). Each account is treated as a separate provider instance with its own credentials and calendar selections.
+- Q: Account identification and labeling → A: When adding a provider, users MUST be able to provide a custom label/name for that account (e.g., "John's Work Google", "Personal Google"). This label is displayed in the configuration dialog and helps users distinguish between multiple accounts of the same provider type.
+- Q: Database schema for multiple accounts → A: The database schema MUST NOT use ProviderType as a unique constraint. Instead, use a combination of ProviderType + UserLabel to allow multiple instances of the same provider type.
+- Q: Overlapping events handling → A: When multiple events occur at the same time (or within a 5-minute window), they MUST be displayed in a single modal dialog with a scrollable list. Each event in the list MUST have its own individual Snooze, Dismiss, and "Dismiss All Future" buttons. Users can interact with each event independently within the same modal.
+- Q: Overlapping events modal behavior → A: When a user dismisses or snoozes one event from a multi-event modal, that specific event is removed from the modal. If other events remain, the modal stays open showing the remaining events. The modal only closes when all events have been actioned (snoozed, dismissed, or auto-dismissed).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Receive Intrusive Event Notifications (Priority: P1)
@@ -39,7 +47,7 @@ As a busy professional, I want to receive a highly visible modal notification be
 
 **Why this priority**: This is the core value proposition of the application - solving the primary problem of missed calendar notifications. Without this, the application has no purpose.
 
-**Independent Test**: Can be fully tested by creating a calendar event in Outlook365, configuring a lead time, and verifying that a modal dialog appears at the correct time on the primary display showing the event name and delivers immediate interruption value.
+**Independent Test**: Can be fully tested by creating a calendar event in Outlook365, configuring a notification lead time, and verifying that a modal dialog appears at the correct time on the primary display showing the event name and delivers immediate interruption value.
 
 **Acceptance Scenarios**:
 
@@ -48,6 +56,11 @@ As a busy professional, I want to receive a highly visible modal notification be
 3. **Given** a notification modal is displayed, **When** I click "Dismiss", **Then** the modal closes and does not reappear for that specific event occurrence
 4. **Given** I have multiple events at different times, **When** each event reaches its notification lead time, **Then** separate modal dialogs appear for each event
 5. **Given** the application was closed during the time a notification should have appeared, **When** I restart the application, **Then** a startup modal displays all missed events since the last shown notification
+6. **Given** I have two events starting at the same time (or within 5 minutes of each other), **When** the notification lead time is reached, **Then** a single modal appears showing both events in a scrollable list
+7. **Given** a multi-event modal is displayed with 3 events, **When** I click "Dismiss" on the second event, **Then** that event is removed from the list and the modal remains open showing the other 2 events
+8. **Given** a multi-event modal is displayed, **When** I click "Snooze" on one event for 10 minutes, **Then** that event is removed from the current modal and will reappear in a new modal after 10 minutes
+9. **Given** a multi-event modal has 2 events remaining, **When** I dismiss both events, **Then** the modal closes completely
+10. **Given** overlapping events from different providers are scheduled, **When** the notification time arrives, **Then** all events appear in the same multi-event modal with provider information displayed for each
 
 ---
 
@@ -74,7 +87,7 @@ As a user, I want to configure which calendar provider I'm using and how far in 
 
 **Why this priority**: Configuration is essential but requires the core notification mechanism (P1) to exist first. Users need default settings to work initially.
 
-**Independent Test**: Can be fully tested by accessing the system tray icon, opening the configuration dialog, selecting a provider from the list, entering calendar credentials, setting notification lead time, and verifying that notifications now appear based on those settings.
+**Independent Test**: Can be fully tested by accessing the system tray icon, opening the configuration dialog, selecting a calendar provider from the list, entering calendar credentials, setting notification lead time, and verifying that notifications now appear based on those settings.
 
 **Acceptance Scenarios**:
 
@@ -84,8 +97,12 @@ As a user, I want to configure which calendar provider I'm using and how far in 
 4. **Given** the provider selection list is displayed, **When** I select "Google Calendar", **Then** the application initiates OAuth 2.0 authentication flow for Google Calendar
 5. **Given** the configuration dialog is open, **When** I complete the OAuth 2.0 authentication flow for my selected calendar provider, **Then** the application successfully connects and retrieves my calendar events
 6. **Given** the configuration dialog is open, **When** I set the notification lead time to 10 minutes, **Then** all future notifications appear 10 minutes before events start
-7. **Given** the configuration dialog is open, **When** I view the "About" section, **Then** I see the current version number of the application
-8. **Given** I have not yet configured a calendar integration, **When** I start the application for the first time, **Then** I am prompted to configure calendar access before notifications can begin
+7. **Given** the configuration dialog is open under "Notification Settings", **When** I view the auto-dismiss timeout control, **Then** I see a spinner/input field labeled "Auto-dismiss notification after (minutes)" with a default value of 10
+8. **Given** the auto-dismiss timeout control is visible, **When** I change the value from 10 to 15 minutes and click "Save", **Then** the new timeout is persisted and applied to all future notifications
+9. **Given** an event notification is displayed, **When** I do not interact with the notification modal (no snooze, dismiss, or dismiss-all-future action) for the configured auto-dismiss duration after the event start time, **Then** the modal automatically closes without adding the event title to the dismissed list
+10. **Given** auto-dismiss timeout is set to 5 minutes and an event starts, **When** 5 minutes pass after the event start time without user interaction, **Then** the notification modal closes automatically
+11. **Given** the configuration dialog is open, **When** I view the "About" section, **Then** I see the current version number of the application
+12. **Given** I have not yet configured a calendar integration, **When** I start the application for the first time, **Then** I am prompted to configure calendar access before notifications can begin
 
 ---
 
@@ -100,14 +117,20 @@ As a power user with multiple calendar sources (personal and work calendars acro
 **Acceptance Scenarios**:
 
 1. **Given** the configuration dialog is open and I have no providers configured, **When** I click "Add Calendar Provider", **Then** I see a list of available providers (Microsoft Outlook365, Google Calendar)
-2. **Given** I have configured Microsoft Outlook365 as a provider, **When** I am shown the list of available calendars from that provider, **Then** all calendars are selected by default (indicated by checked checkboxes)
-3. **Given** calendars from a provider are displayed with selection checkboxes, **When** I uncheck specific calendars I don't want notifications from, **Then** those calendars are deselected and notifications will not appear for their events
-4. **Given** I have selected calendars from Microsoft Outlook365, **When** I click "Add Another Provider" and configure Google Calendar, **Then** both providers are active and I can select calendars from Google Calendar independently
-5. **Given** I have multiple calendar providers configured, **When** events occur from different selected calendars across both providers, **Then** all events appear in a single unified notification stream with the provider indicated for each event
-6. **Given** I have configured multiple providers, **When** I access the configuration dialog, **Then** I can see all configured providers listed with their authentication status
-7. **Given** a provider is configured, **When** I click "Remove Provider" next to that provider, **Then** the provider is removed and no further notifications appear for that provider's events
-8. **Given** I have calendars deselected for a provider, **When** I return to the configuration dialog later, **Then** my calendar selections are preserved exactly as I configured them
-9. **Given** calendars are deselected for a provider, **When** I decide to include them later, **Then** I can check the checkboxes again without re-authenticating with the provider
+2. **Given** I have completed OAuth authentication for Microsoft Outlook365, **When** the calendar selection dialog appears, **Then** I see a list of all available calendars from that provider (e.g., "Personal Calendar", "Work Calendar", "Team Calendar")
+3. **Given** the calendar selection dialog is displayed, **When** I see the calendar list, **Then** all calendars are checked/selected by default
+4. **Given** calendars are displayed with checkboxes, **When** I uncheck a specific calendar (e.g., "Archive Calendar"), **Then** that calendar is deselected
+5. **Given** I have deselected one or more calendars, **When** I click "Apply" or "Save", **Then** my selections are persisted and only the selected calendars will generate notifications
+6. **Given** I have configured and selected calendars from Microsoft Outlook365, **When** I add a second provider (Google Calendar) and authenticate, **Then** I am shown the Google Calendar selection dialog and can independently select which Google calendars to monitor
+7. **Given** I have calendars selected from both Outlook365 and Google Calendar, **When** events occur on the selected calendars from both providers, **Then** notifications are generated for all selected calendar events
+8. **Given** I have previously configured calendar selections, **When** I reopen the configuration dialog, **Then** my calendar selections from each provider are preserved (persisted)
+9. **Given** I have deselected calendars for a provider, **When** I later decide to monitor them again, **Then** I can re-check those calendars without re-authenticating with the provider
+10. **Given** all calendars are deselected for a provider, **When** no selected calendars exist, **Then** no notifications are generated for that provider's events
+11. **Given** I want to monitor calendars from multiple Google accounts, **When** I click "Add Calendar Provider" and select "Google Calendar", **Then** I am prompted to provide a custom label (e.g., "Personal Google", "Work Google") to identify this account
+12. **Given** I have provided a label for a Google Calendar account, **When** OAuth authentication completes, **Then** that account appears in the configuration dialog with the custom label I provided
+13. **Given** I have configured "Personal Google" and want to add another Google account, **When** I click "Add Calendar Provider" again and select "Google Calendar", **Then** I can add a second Google account with a different label (e.g., "Work Google")
+14. **Given** I have multiple Google Calendar accounts configured (Personal and Work), **When** events occur across all selected calendars from both Google accounts, **Then** notifications show events from all accounts with the account label displayed
+15. **Given** I have multiple accounts of the same provider type, **When** I view the configuration dialog, **Then** each account is listed separately with its custom label (e.g., "Personal Google", "Work Google", "Company Outlook365")
 
 ---
 
@@ -130,18 +153,24 @@ As a user, I want the application to run unobtrusively in the system tray with q
 ### Edge Cases
 
 - What happens when the application loses connection to the calendar service (network outage, credential expiration)?
+  - Application caches calendar events locally in SQLite database for up to 2 weeks ahead
+  - Cached events continue to trigger notifications even without internet connection
   - Application should attempt to reconnect automatically at regular intervals
-  - User should be notified via system tray icon tooltip or status indicator in settings
-  - Cached events should continue to trigger notifications if they were already retrieved
+  - User should be notified via system tray icon tooltip or status indicator in settings when offline
+  - When connection is restored, application syncs with remote calendar and updates cache
   
 - How does the system handle multiple simultaneous events starting at the same time?
   - All events should be shown in a single modal with a list of concurrent events
   - Each event should have its own snooze/dismiss controls
   
 - What happens when an event is modified or cancelled in the calendar after the notification has been scheduled?
-  - Application should sync with calendar at regular intervals (configurable, default: every 5 minutes)
-  - Cancelled events should not trigger notifications
-  - Modified event times should update notification schedules
+  - Application syncs with calendar at regular intervals (configurable, default: every 5 minutes)
+  - During sync, application compares cached events with remote events to detect modifications
+  - Modified events: LastModifiedTime, StartTime, and Title are checked for changes
+  - If event time changed: notification is automatically rescheduled to new time
+  - If event title changed: cached event is updated with new title
+  - Cancelled events: marked as cancelled in cache and pending notifications are cancelled
+  - Deleted events: removed from cache and pending notifications are cancelled
   
 - How does the system handle events that start in the past (user sets up calendar integration after events have passed)?
   - On application startup (after initial setup), show startup modal with missed events from the last 24 hours only
@@ -167,15 +196,25 @@ As a user, I want the application to run unobtrusively in the system tray with q
   - Notification should indicate that the event has already started
   
 - What happens when the primary display changes (laptop connected to/disconnected from external monitor)?
-  - Application should detect display configuration changes
-  - Modal should always appear on the current primary display
-  - If primary display is disconnected, modal should appear on an available display
+  - Application should automatically detect display configuration changes using Windows events
+  - Modal should immediately move to center of the current primary display when configuration changes
+  - If resolution changes, modal should resize to fit within screen boundaries (max 90% of screen dimensions)
+  - Modal should always remain centered and fully visible on primary display
 
 - What happens to a notification modal that the user doesn't interact with?
   - If a notification modal remains open and the user takes no action (no snooze, dismiss, or dismiss all future) for a configurable duration after the event start time, the modal MUST automatically dismiss itself
   - Default auto-dismiss timeout: 10 minutes after event start time
-  - Auto-dismiss timeout is configurable by end users through the configuration dialog
+  - Auto-dismiss timeout is configurable by end users through the configuration dialog (range: 5-120 minutes)
   - Auto-dismissed notifications do not persist as dismissed event titles and will trigger notifications for future occurrences
+  - If multiple events are displayed in a single modal, each event auto-dismisses independently based on its start time
+
+- How are dismissed event titles matched?
+  - Title matching is case-insensitive: "Daily Standup" matches "daily standup"
+  - Title matching is exact: "Team Meeting" does NOT match "Team Meeting 2"
+  - Leading and trailing whitespace is automatically trimmed before matching
+  - Database uses case-insensitive SQL comparison for performance
+  - Example matches: "Project Review" = "project review" = "  Project Review  "
+  - Example non-matches: "Stand-up" ≠ "Stand-up Meeting"
 
 - What happens when a user configures multiple calendar providers with overlapping events (same event appears in multiple providers)?
   - System should detect and deduplicate events based on unique event identifier within each provider
@@ -321,7 +360,7 @@ As a user, I want the application to run unobtrusively in the system tray with q
 
 - **Calendar Event**: Represents a scheduled event from the user's calendar. Key attributes include unique identifier, title (text), start time, end time, source calendar, and source calendar provider. Events are retrieved from external calendar providers and cached locally for notification scheduling.
 
-- **Notification**: Represents a scheduled notification for a calendar event. Key attributes include associated event identifier, scheduled notification time (calculated from event start time minus lead time), notification status (pending, shown, snoozed, dismissed), and snooze duration if applicable. Notifications track the lifecycle of user interactions with event alerts and work across all configured providers.
+- **Notification**: Represents a scheduled notification for a calendar event. Key attributes include associated event identifier, scheduled notification time (calculated from event start time minus notification lead time), notification status (pending, shown, snoozed, dismissed), and snooze duration if applicable. Notifications track the lifecycle of user interactions with event alerts and work across all configured calendar providers.
 
 - **Dismissed Event Title**: Represents an event title for which all future notifications have been dismissed. Key attributes include the exact event title text and the timestamp when the dismissal was created. This entity enables filtering of future notifications across all providers and calendars.
 
@@ -329,7 +368,7 @@ As a user, I want the application to run unobtrusively in the system tray with q
 
 - **Selected Calendar**: Represents a calendar from a specific provider that the user has selected for notifications. Key attributes include provider configuration identifier, calendar ID (from provider), calendar display name, and selection state (selected/deselected). Users can select which calendars from each configured provider contribute to the unified notification stream. All calendars are selected by default when a provider is first configured.
 
-- **Application Configuration**: Represents user preferences and global settings. Key attributes include notification lead time (minutes), calendar sync interval (minutes), auto-dismiss timeout (minutes), and startup behavior preferences. This entity persists user customizations and applies across all configured providers.
+- **Application Configuration**: Represents user preferences and global settings. Key attributes include notification lead time (minutes), calendar sync interval (minutes), auto-dismiss timeout (minutes), and startup behavior preferences. This entity persists user customizations and applies across all configured calendar providers.
 
 - **Application State**: Represents runtime state that must persist across restarts. Key attributes include last notification shown timestamp, currently snoozed notifications with their wake times, and calendar provider connection health status for each configured provider.
 
@@ -337,19 +376,19 @@ As a user, I want the application to run unobtrusively in the system tray with q
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can see modal notifications for upcoming calendar events at their configured lead time with 100% accuracy (no missed notifications when application is running)
+- **SC-001**: Users can see modal notifications for upcoming calendar events at their configured notification lead time with 100% accuracy (no missed notifications when application is running)
 
-- **SC-002**: Users receive startup notifications for all missed events within 2 seconds of application launch (only on restart after initial setup; first-time credential setup does not display missed events)
+- **SC-002**: Users receive startup notifications for all missed events within 15 seconds of application launch (only on restart after initial setup; first-time credential setup does not display missed events)
 
 - **SC-003**: Modal notifications appear on the primary display and capture user attention without fail (modal remains on top until user interaction)
 
-- **SC-004**: Users can select from available providers (Microsoft Outlook365 or Google Calendar), configure their chosen calendar integration, and begin receiving notifications within 3 minutes of first application launch
+- **SC-004**: Users can select from available calendar providers (Microsoft Outlook365 or Google Calendar), configure their chosen calendar integration, and begin receiving notifications within 3 minutes of first application launch
 
 - **SC-005**: Application successfully syncs with calendar provider and updates event list every 5 minutes (configurable) with 99% success rate under normal network conditions
 
-- **SC-006**: Users can snooze notifications and receive re-notification at exactly the selected snooze time (within 5 seconds accuracy)
+- **SC-006**: Users can snooze notifications and receive re-notification at exactly the selected snooze duration (within 5 seconds accuracy)
 
-- **SC-007**: Users can dismiss all future notifications for a specific event title and receive zero notifications for that title going forward
+- **SC-007**: Users can dismiss all future notifications for a specific dismissed event title and receive zero notifications for that title going forward
 
 - **SC-008**: Users can restore notifications for previously dismissed event titles within 30 seconds of accessing the configuration dialog
 

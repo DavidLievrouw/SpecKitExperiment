@@ -46,7 +46,7 @@ Build a Windows system tray application that integrates with multiple calendar p
 **Target Platform**: Windows 10+ (x64, x86), portable executable  
 **Project Type**: Desktop application (system tray + modal windows)  
 **Performance Goals**:
-- Notification appearance: Within 5 seconds of lead time reached
+- Notification appearance: Within 5 seconds of notification lead time reached
 - Configuration dialog: Open within 2 seconds
 - Calendar sync: Complete within 30 seconds
 - Memory footprint: < 50MB at rest
@@ -98,7 +98,7 @@ Build a Windows system tray application that integrates with multiple calendar p
 - **Assertions**: Shouldly for readable test code
 - **Test Categories**:
   - Calendar Provider Abstraction (mock calendar services)
-  - Notification Engine (lead time calculation, snooze scheduling)
+  - Notification Engine (notification lead time calculation, snooze scheduling)
   - Configuration Management (settings persistence)
   - State Persistence (SQLite operations)
   - System Tray Integration (icon state transitions)
@@ -185,21 +185,25 @@ ModalCalendarNotification/
 │   │   │   │
 │   │   │   ├── NotificationManagement/           # Vertical Slice: Notification Scheduling & Delivery
 │   │   │   │   ├── INotificationEngine.cs
-│   │   │   │   ├── NotificationEngine.cs         (core scheduler, filters by selected calendars)
+│   │   │   │   ├── NotificationEngine.cs         (core scheduler, groups concurrent events within 5-min window)
 │   │   │   │   ├── SnoozeScheduler.cs            (snooze timer management)
 │   │   │   │   ├── AutoDismissHandler.cs         (auto-dismiss after timeout)
 │   │   │   │   ├── MissedEventDetector.cs        (24-hour startup lookback, respects calendar selection)
-│   │   │   │   ├── NotificationModalViewModel.cs (MVVM ViewModel)
-│   │   │   │   ├── NotificationModal.xaml/.cs    (WPF modal UI)
-│   │   │   │   └── NotificationManagementTests.cs (includes scheduling logic tests)
+│   │   │   │   ├── NotificationModalViewModel.cs (MVVM ViewModel, supports multi-event display)
+│   │   │   │   ├── NotificationEventItem.cs      (model for individual event in multi-event modal)
+│   │   │   │   ├── NotificationModal.xaml/.cs    (WPF modal UI, scrollable list for concurrent events)
+│   │   │   │   └── NotificationManagementTests.cs (includes concurrent event grouping tests)
 │   │   │   │
 │   │   │   ├── ConfigurationManagement/          # Vertical Slice: Settings & Preferences
 │   │   │   │   ├── IConfigurationService.cs
 │   │   │   │   ├── ConfigurationService.cs
-│   │   │   │   ├── ProviderSelectionViewModel.cs (MVVM ViewModel)
-│   │   │   │   ├── ProviderSelectionDialog.xaml/.cs (provider list UI)
-│   │   │   │   ├── ConfigurationDialogViewModel.cs (MVVM ViewModel)
-│   │   │   │   ├── ConfigurationDialog.xaml/.cs (settings UI)
+│   │   │   │   ├── ProviderSelectionViewModel.cs (MVVM ViewModel, includes account label input)
+│   │   │   │   ├── ProviderSelectionDialog.xaml/.cs (provider list UI with account labeling)
+│   │   │   │   ├── CalendarListViewModel.cs (MVVM ViewModel for calendar selection)
+│   │   │   │   ├── CalendarListDialog.xaml/.cs (calendar selection UI with checkboxes)
+│   │   │   │   ├── ConfigurationDialogViewModel.cs (MVVM ViewModel, includes auto-dismiss timeout)
+│   │   │   │   ├── ConfigurationDialog.xaml/.cs (settings UI with notification behavior tab)
+│   │   │   │   ├── ProviderAccountItem.cs        (model for multi-account display in config UI)
 │   │   │   │   └── ConfigurationManagementTests.cs
 │   │   │   │
 │   │   │   ├── DismissedEventsManagement/        # Vertical Slice: Dismissed Title Persistence
@@ -268,7 +272,7 @@ ModalCalendarNotification/
 │   │   │   │   ├── GoogleEventMapperTests.cs             (property mapping with CompareNetObjects)
 │   │   │   │   └── CalendarSyncServiceTests.cs           (Polly retry policies)
 │   │   │   ├── NotificationManagement/
-│   │   │   │   ├── NotificationEngineTests.cs            (lead time, snooze, auto-dismiss)
+│   │   │   │   ├── NotificationEngineTests.cs            (notification lead time, snooze, auto-dismiss)
 │   │   │   │   ├── MissedEventDetectorTests.cs           (24-hour window)
 │   │   │   │   └── AutoDismissHandlerTests.cs
 │   │   │   ├── DismissedEventsManagement/
@@ -359,19 +363,22 @@ Feature 2: CalendarSelection
 
 Feature 3: NotificationManagement
 ├── INotificationEngine (interface)
-├── NotificationEngine (filters by selected calendars)
+├── NotificationEngine (filters by selected calendars, groups concurrent events)
 ├── SnoozeScheduler
 ├── AutoDismissHandler
 ├── MissedEventDetector
-├── NotificationModal (WPF UI)
-├── NotificationModalViewModel (MVVM)
-└── Tests (scheduling logic)
+├── NotificationModal (WPF UI - supports single and multi-event display)
+├── NotificationModalViewModel (MVVM - handles multiple concurrent events)
+├── NotificationEventItem (model for each event in multi-event modal)
+└── Tests (scheduling logic, concurrent event grouping)
 
 Feature 4: ConfigurationManagement
 ├── IConfigurationService (interface)
 ├── ConfigurationService
-├── ProviderSelectionDialog (WPF UI)
-├── ConfigurationDialog (WPF UI)
+├── ProviderSelectionDialog (WPF UI with account label input)
+├── CalendarListDialog (WPF UI for calendar selection)
+├── ConfigurationDialog (WPF UI with auto-dismiss timeout control)
+├── ProviderAccountItem (model for multi-account display)
 └── Tests
 
 ... and so on for each feature
@@ -561,7 +568,135 @@ Examples of rules enforced:
 
 **Rationale**: Enforces consistent code quality across the entire codebase, preventing technical debt and improving readability.
 
-### 5. Provider Abstraction Pattern
+### 5. Calendar Selection Dialog Pattern
+
+After OAuth authentication completes, users are presented with a calendar selection dialog showing all available calendars from the authenticated provider:
+
+```csharp
+// Feature: ConfigurationManagement/CalendarListViewModel.cs
+public class CalendarListViewModel : ObservableObject
+{
+    public IList<CalendarSelectionItem> AvailableCalendars { get; }
+    
+    public CalendarSelectionItem[] GetSelectedCalendars() 
+        => AvailableCalendars.Where(c => c.IsSelected).ToArray();
+    
+    public async Task LoadCalendarsAsync(int providerCredentialsId)
+    {
+        var remoteCalendars = await _calendarProvider.GetAvailableCalendarsAsync();
+        var selectedCalendars = await _selectionRepository.GetSelectedCalendarsAsync(providerCredentialsId);
+        var selectedIds = selectedCalendars.Select(s => s.RemoteCalendarId).ToHashSet();
+        
+        AvailableCalendars = remoteCalendars
+            .Select(cal => new CalendarSelectionItem
+            {
+                RemoteCalendarId = cal.Id,
+                CalendarName = cal.Name,
+                IsSelected = selectedIds.Contains(cal.Id) // Restore previous selection
+            })
+            .ToList();
+    }
+}
+
+public class CalendarSelectionItem : ObservableObject
+{
+    public string RemoteCalendarId { get; set; }
+    public string CalendarName { get; set; }
+    
+    private bool _isSelected = true; // Default: all selected
+    public bool IsSelected 
+    { 
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+}
+
+// Feature: ConfigurationManagement/CalendarListDialog.xaml.cs
+public partial class CalendarListDialog : Window
+{
+    public CalendarListDialog(CalendarListViewModel viewModel)
+    {
+        InitializeComponent();
+        DataContext = viewModel;
+    }
+    
+    // XAML shows:
+    // - ListBox with CheckBox for each calendar
+    // - All calendars checked by default
+    // - Apply/Cancel buttons
+}
+
+// Feature: ConfigurationManagement/ConfigurationDialog.xaml
+// Contains tabs including:
+// - Calendar Providers tab (add, remove, select calendars)
+// - Notification Settings tab (notification lead time, auto-dismiss timeout)
+// - Dismissed Events tab (manage dismissed titles)
+// - About tab (version info)
+```
+
+**Rationale**: Centralizes calendar selection UI, makes selection state manageable and testable, persists user preferences, maintains separation between provider authentication and calendar selection workflows.
+
+### 6. Auto-Dismiss Timeout Configuration Pattern
+
+Users can configure how long a notification remains open without user interaction before auto-dismissing:
+
+```csharp
+// Feature: ConfigurationManagement/ConfigurationDialogViewModel.cs
+public class ConfigurationDialogViewModel : ObservableObject
+{
+    private int _autoDismissMinutesAfterStart = 10; // Default
+    public int AutoDismissMinutesAfterStart 
+    { 
+        get => _autoDismissMinutesAfterStart;
+        set => SetProperty(ref _autoDismissMinutesAfterStart, value);
+    }
+    
+    public async Task SaveConfigurationAsync()
+    {
+        // Validate range
+        if (AutoDismissMinutesAfterStart < 1 || AutoDismissMinutesAfterStart > 120)
+            throw new ArgumentException("Auto-dismiss timeout must be 1-120 minutes");
+        
+        await _configService.SetAutoDismissMinutesAsync(AutoDismissMinutesAfterStart);
+    }
+}
+
+// Feature: NotificationManagement/AutoDismissHandler.cs
+public class AutoDismissHandler
+{
+    public void ScheduleAutoDismiss(Notification notification, int autoDismissMinutesAfterStart)
+    {
+        var dismissTime = notification.Event.StartTime.AddMinutes(autoDismissMinutesAfterStart);
+        var delay = dismissTime - _timeProvider.Now;
+        
+        if (delay.TotalSeconds > 0)
+        {
+            var timer = new Timer(async _ => 
+            {
+                if (notification.Status == NotificationStatus.Pending) // User hasn't interacted
+                {
+                    await _uiDispatcher.AutoDismissNotificationAsync(notification);
+                    // Do NOT add to dismissed titles; future occurrences should still notify
+                }
+            }, 
+            state: null, 
+            dueTime: delay, 
+            period: Timeout.InfiniteTimeSpan);
+        }
+    }
+}
+
+// Feature: ConfigurationManagement/ConfigurationDialog.xaml
+// Notification Settings tab includes:
+// <Spinner Name="AutoDismissSpinner" 
+//          Minimum="1" Maximum="120" 
+//          Value="{Binding AutoDismissMinutesAfterStart}"
+//          Text="Auto-dismiss after (minutes)" />
+```
+
+**Rationale**: Allows users to customize notification behavior, persists user preference, auto-dismiss does NOT mark event as permanently dismissed (different from "dismiss all future"), enables testing of timeout scenarios.
+
+### 7. Provider Abstraction Pattern
 
 ```csharp
 public interface ICalendarProvider
@@ -585,30 +720,135 @@ services.AddScoped<ICalendarProvider>(sp =>
 
 **Rationale**: Enables swapping calendar providers at runtime without changing notification engine. Facilitates testing with FakeCalendarProvider. Allows users to choose Outlook365 or Google Calendar via configuration.
 
-### 3. Repository Pattern for Data Persistence
+### 8. Repository Pattern for Data Persistence
 
 ```csharp
-public interface INotificationRepository
+public interface ICalendarSelectionRepository
+{
+    Task<IEnumerable<SelectedCalendar>> GetSelectedCalendarsAsync(int providerCredentialsId);
+    Task SaveSelectedCalendarsAsync(int providerCredentialsId, IEnumerable<SelectedCalendar> selections);
+    Task<bool> IsCalendarSelectedAsync(int providerCredentialsId, string remoteCalendarId);
+}
+
+public class CalendarSelectionRepository : ICalendarSelectionRepository
+{
+    // SQLite implementation
+}
+
+public interface IDismissedEventTitleRepository
 {
     Task<IEnumerable<string>> GetDismissedEventTitlesAsync();
     Task AddDismissedTitleAsync(string title);
     Task RemoveDismissedTitleAsync(string title);
+    Task<bool> IsEventTitleDismissedAsync(string title);
 }
 
-public class NotificationRepository : INotificationRepository
+public class DismissedEventTitleRepository : IDismissedEventTitleRepository
 {
-    // SQLite implementation using Entity Framework or Dapper
+    private readonly DbContext _dbContext;
+    
+    public DismissedEventTitleRepository(DbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+    
+    public async Task<bool> IsEventTitleDismissedAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return false;
+        
+        var normalizedTitle = title.Trim();
+        
+        // Case-insensitive exact match (using LOWER in SQL for performance)
+        return await _dbContext.DismissedEventTitles
+            .AnyAsync(d => EF.Functions.Like(
+                d.DismissedEventTitle.Trim().ToLower(), 
+                normalizedTitle.ToLower()));
+    }
+    
+    public async Task AddDismissedTitleAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return;
+        
+        var normalizedTitle = title.Trim();
+        
+        // Check if already exists (case-insensitive)
+        var exists = await IsEventTitleDismissedAsync(normalizedTitle);
+        if (!exists)
+        {
+            _dbContext.DismissedEventTitles.Add(new DismissedEventTitle
+            {
+                DismissedEventTitle = normalizedTitle,
+                CreatedAt = DateTime.UtcNow
+            });
+            await _dbContext.SaveChangesAsync();
+        }
+    }
+    
+    public async Task<IEnumerable<string>> GetDismissedEventTitlesAsync()
+    {
+        return await _dbContext.DismissedEventTitles
+            .Select(d => d.DismissedEventTitle)
+            .ToListAsync();
+    }
+    
+    public async Task RemoveDismissedTitleAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return;
+        
+        var normalizedTitle = title.Trim();
+        
+        // Remove using case-insensitive match
+        var toRemove = await _dbContext.DismissedEventTitles
+            .Where(d => EF.Functions.Like(
+                d.DismissedEventTitle.Trim().ToLower(), 
+                normalizedTitle.ToLower()))
+            .ToListAsync();
+        
+        _dbContext.DismissedEventTitles.RemoveRange(toRemove);
+        await _dbContext.SaveChangesAsync();
+    }
 }
 
-public class FakeNotificationRepository : INotificationRepository
+public class FakeDismissedEventTitleRepository : IDismissedEventTitleRepository
 {
-    // In-memory implementation for unit testing
+    private readonly HashSet<string> _dismissedTitles = new(StringComparer.OrdinalIgnoreCase);
+    
+    public Task<bool> IsEventTitleDismissedAsync(string title)
+    {
+        return Task.FromResult(_dismissedTitles.Contains(title?.Trim() ?? ""));
+    }
+    
+    public Task AddDismissedTitleAsync(string title)
+    {
+        if (!string.IsNullOrWhiteSpace(title))
+            _dismissedTitles.Add(title.Trim());
+        return Task.CompletedTask;
+    }
+    
+    public Task<IEnumerable<string>> GetDismissedEventTitlesAsync()
+    {
+        return Task.FromResult<IEnumerable<string>>(_dismissedTitles.ToList());
+    }
+    
+    public Task RemoveDismissedTitleAsync(string title)
+    {
+        if (!string.IsNullOrWhiteSpace(title))
+            _dismissedTitles.Remove(title.Trim());
+        return Task.CompletedTask;
+    }
 }
 ```
 
+**Rationale**: 
+- **Case-Insensitive Exact Match**: "Daily Standup" matches "daily standup" but NOT "Daily Standup 2"
+- **Whitespace Trimming**: Leading/trailing whitespace ignored for matching
+- **Database Efficiency**: Uses SQL LOWER() function for case-insensitive comparison
+- **StringComparer.OrdinalIgnoreCase**: In-memory fake uses appropriate comparer for testing
+- **Normalized Storage**: Titles stored with trimmed whitespace for consistency
+
 **Rationale**: Abstracts SQLite details from business logic. Enables in-memory fake implementations for unit tests without touching database. Simplifies migration to different database if needed.
 
-### 4. Dependency Injection for Vendor Independence
+### 9. Dependency Injection for Vendor Independence
 
 ```csharp
 // In ServiceConfiguration.cs
@@ -687,7 +927,7 @@ public class NotificationEngine : INotificationEngine
 
 **Rationale**: Pure functions for business logic (notification time calculation, filtering, snooze logic) are easy to test, reason about, and debug. Side effects (reading from calendar API, displaying UI) are isolated at function boundaries. Simplifies refactoring and reduces bugs.
 
-### 6. System Tray Integration with Modal Windows
+### 10. System Tray Integration with Modal Windows
 
 ```csharp
 public class SystemTrayIcon
@@ -726,7 +966,142 @@ public class SystemTrayIcon
 
 **Rationale**: System tray integration keeps the application hidden until needed. Modal dialogs force user attention to events without requiring a taskbar presence. `Topmost = true` ensures notifications appear above all windows, including fullscreen applications.
 
-### 7. Startup Missed Event Detection
+### 10.5. Multi-Monitor Display Handling Pattern
+
+Notification modals automatically reposition when display configuration changes:
+
+```csharp
+// Feature: NotificationManagement/DisplayMonitor.cs
+public class DisplayMonitor
+{
+    private Window _currentModal;
+    
+    public DisplayMonitor()
+    {
+        // Subscribe to display configuration changes
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+    
+    public static Screen GetPrimaryDisplay() 
+        => Screen.AllScreens.FirstOrDefault(s => s.Primary) ?? Screen.PrimaryScreen;
+    
+    public void ShowModalOnPrimaryDisplay(Window modal)
+    {
+        _currentModal = modal;
+        PositionModalOnPrimaryDisplay(modal);
+        
+        modal.Closed += (s, e) => _currentModal = null;
+        modal.Show();
+    }
+    
+    private void PositionModalOnPrimaryDisplay(Window modal)
+    {
+        var primary = GetPrimaryDisplay();
+        
+        // Ensure modal fits within screen bounds
+        var maxWidth = primary.WorkingArea.Width * 0.9; // Max 90% of screen width
+        var maxHeight = primary.WorkingArea.Height * 0.9; // Max 90% of screen height
+        
+        if (modal.Width > maxWidth) modal.Width = maxWidth;
+        if (modal.Height > maxHeight) modal.Height = maxHeight;
+        
+        // Center on primary display
+        modal.WindowStartupLocation = WindowStartupLocation.Manual;
+        modal.Left = primary.WorkingArea.Left + (primary.WorkingArea.Width - modal.Width) / 2;
+        modal.Top = primary.WorkingArea.Top + (primary.WorkingArea.Height - modal.Height) / 2;
+    }
+    
+    private void OnDisplaySettingsChanged(object sender, EventArgs e)
+    {
+        if (_currentModal == null || !_currentModal.IsVisible) return;
+        
+        // Display configuration changed - reposition modal to primary display
+        Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            PositionModalOnPrimaryDisplay(_currentModal);
+        });
+    }
+    
+    public void ResizeModalToFitScreen(Window modal)
+    {
+        var screen = Screen.FromHandle(new WindowInteropHelper(modal).Handle);
+        
+        // Check if modal exceeds screen boundaries
+        var screenBounds = screen.WorkingArea;
+        var modalBounds = new Rectangle(
+            (int)modal.Left, 
+            (int)modal.Top, 
+            (int)modal.Width, 
+            (int)modal.Height);
+        
+        if (!screenBounds.Contains(modalBounds))
+        {
+            // Modal exceeds boundaries - resize and reposition
+            if (modal.Width > screenBounds.Width) 
+                modal.Width = screenBounds.Width * 0.9;
+            if (modal.Height > screenBounds.Height) 
+                modal.Height = screenBounds.Height * 0.9;
+            
+            // Recenter
+            modal.Left = screenBounds.Left + (screenBounds.Width - modal.Width) / 2;
+            modal.Top = screenBounds.Top + (screenBounds.Height - modal.Height) / 2;
+        }
+    }
+    
+    public void Dispose()
+    {
+        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+    }
+}
+
+// Feature: NotificationManagement/NotificationModal.xaml.cs
+public partial class NotificationModal : Window
+{
+    private readonly DisplayMonitor _displayMonitor;
+    
+    public NotificationModal(DisplayMonitor displayMonitor)
+    {
+        InitializeComponent();
+        _displayMonitor = displayMonitor;
+        
+        // Subscribe to size changes to ensure modal stays within bounds
+        SizeChanged += (s, e) => _displayMonitor.ResizeModalToFitScreen(this);
+    }
+    
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        
+        // Hook into Win32 window messages to detect display changes
+        var source = PresentationSource.FromVisual(this) as HwndSource;
+        source?.AddHook(WndProc);
+    }
+    
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        const int WM_DISPLAYCHANGE = 0x007E;
+        
+        if (msg == WM_DISPLAYCHANGE)
+        {
+            // Resolution changed - resize and reposition modal
+            _displayMonitor.ResizeModalToFitScreen(this);
+            handled = true;
+        }
+        
+        return IntPtr.Zero;
+    }
+}
+```
+
+**Rationale**:
+- **Display Change Detection**: `SystemEvents.DisplaySettingsChanged` monitors for monitor add/remove/configuration changes
+- **Automatic Repositioning**: When primary display changes, modal automatically moves to center of new primary display
+- **Resolution Handling**: Modal resizes to fit within 90% of screen bounds if resolution changes
+- **Real-time Updates**: Uses WM_DISPLAYCHANGE Windows message for immediate response to display changes
+- **Boundary Protection**: Ensures modal never exceeds screen boundaries after resize
+- **Multi-Monitor Support**: Works seamlessly with laptop docking/undocking scenarios
+
+### 11. Startup Missed Event Detection
 
 ```csharp
 public class MissedEventDetector
@@ -768,7 +1143,7 @@ public class MissedEventDetector
 - When credentials are added for the first time, no missed events are shown (handles initial setup case)
 - On next app restart, the 24-hour lookback applies only if credentials were previously configured
 
-### 8. Auto-Dismiss After Configurable Timeout
+### 12. Auto-Dismiss After Configurable Timeout
 
 ```csharp
 public class AutoDismissHandler
@@ -802,6 +1177,1061 @@ public class AutoDismissHandler
 - Timeout is configurable by users in the settings dialog (default: 10 minutes post-event-start)
 - Auto-dismissed notifications do NOT persist as dismissed event titles
 - Future occurrences of the same event will still trigger notifications (unlike explicit "dismiss all future")
+
+### 13. Overlapping Events Handling Pattern
+
+When multiple events occur at the same time (or within a 5-minute window), they are displayed in a single modal with individual action buttons for each event:
+
+```csharp
+// Feature: NotificationManagement/NotificationModalViewModel.cs
+public class NotificationModalViewModel : ObservableObject
+{
+    // Support multiple concurrent events in a single modal
+    public ObservableCollection<NotificationEventItem> CurrentEvents { get; }
+    
+    private NotificationEventItem _selectedEvent;
+    public NotificationEventItem SelectedEvent
+    {
+        get => _selectedEvent;
+        set => SetProperty(ref _selectedEvent, value);
+    }
+    
+    // Tracks if modal is currently displayed
+    private bool _isModalOpen;
+    public bool IsModalOpen
+    {
+        get => _isModalOpen;
+        set => SetProperty(ref _isModalOpen, value);
+    }
+    
+    public NotificationModalViewModel(IEnumerable<CalendarEvent> concurrentEvents)
+    {
+        CurrentEvents = new ObservableCollection<NotificationEventItem>(
+            concurrentEvents.Select(evt => new NotificationEventItem
+            {
+                Event = evt,
+                IsVisible = true,
+                AutoDismissTime = CalculateAutoDismissTime(evt)
+            }));
+        
+        SelectedEvent = CurrentEvents.FirstOrDefault();
+        IsModalOpen = true;
+        
+        // Start monitoring for new overlapping events and auto-dismiss
+        StartEventMonitoring();
+    }
+    
+    // Add new event to existing modal if it falls within time window
+    public void AddEventIfOverlapping(CalendarEvent evt)
+    {
+        if (!IsModalOpen) return;
+        
+        // Check if event start time is within 5 minutes of existing events
+        var firstEventTime = CurrentEvents.FirstOrDefault()?.Event.StartTime;
+        if (firstEventTime.HasValue && 
+            Math.Abs((evt.StartTime - firstEventTime.Value).TotalMinutes) <= 5)
+        {
+            var newItem = new NotificationEventItem
+            {
+                Event = evt,
+                IsVisible = true,
+                AutoDismissTime = CalculateAutoDismissTime(evt)
+            };
+            
+            CurrentEvents.Add(newItem);
+        }
+    }
+    
+    // Monitor for auto-dismiss timeout on individual events
+    private void StartEventMonitoring()
+    {
+        Task.Run(async () =>
+        {
+            while (IsModalOpen && CurrentEvents.Any())
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1)); // Check every second
+                
+                var now = _timeProvider.Now;
+                var itemsToAutoDismiss = CurrentEvents
+                    .Where(item => item.AutoDismissTime <= now)
+                    .ToList();
+                
+                foreach (var item in itemsToAutoDismiss)
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        CurrentEvents.Remove(item);
+                    });
+                }
+                
+                // Close modal if no events remain
+                if (!CurrentEvents.Any())
+                {
+                    await CloseModalAsync();
+                }
+            }
+        });
+    }
+    
+    private DateTime CalculateAutoDismissTime(CalendarEvent evt)
+    {
+        var autoDismissMinutes = _configService.GetAutoDismissTimeoutMinutes();
+        return evt.StartTime.AddMinutes(autoDismissMinutes);
+    }
+    
+    public async Task SnoozeEventAsync(NotificationEventItem item, int minutes)
+    {
+        // Remove from current modal
+        CurrentEvents.Remove(item);
+        
+        // Schedule re-notification
+        await _snoozeScheduler.ScheduleSnoozeAsync(item.Event, minutes);
+        
+        // Close modal if no events remain
+        if (!CurrentEvents.Any())
+        {
+            await CloseModalAsync();
+        }
+    }
+    
+    public async Task DismissEventAsync(NotificationEventItem item)
+    {
+        // Remove from current modal
+        CurrentEvents.Remove(item);
+        
+        // Mark as dismissed (single occurrence)
+        item.Event.IsDismissed = true;
+        
+        // Close modal if no events remain
+        if (!CurrentEvents.Any())
+        {
+            await CloseModalAsync();
+        }
+    }
+    
+    public async Task DismissAllFutureAsync(NotificationEventItem item)
+    {
+        // Add title to dismissed list (case-insensitive exact match)
+        await _dismissedRepository.AddDismissedTitleAsync(item.Event.Title.Trim());
+        
+        // Remove from current modal
+        CurrentEvents.Remove(item);
+        
+        // Close modal if no events remain
+        if (!CurrentEvents.Any())
+        {
+            await CloseModalAsync();
+        }
+    }
+    
+    private async Task CloseModalAsync()
+    {
+        IsModalOpen = false;
+        await _uiDispatcher.CloseModalAsync();
+    }
+}
+
+public class NotificationEventItem : ObservableObject
+{
+    public CalendarEvent Event { get; set; }
+    
+    private bool _isVisible = true;
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set => SetProperty(ref _isVisible, value);
+    }
+    
+    // Time when this specific event should auto-dismiss
+    public DateTime AutoDismissTime { get; set; }
+}
+
+// Feature: NotificationManagement/NotificationEngine.cs
+public class NotificationEngine
+{
+    private const int ConcurrentEventWindowMinutes = 5;
+    
+    // Group events that occur within 5 minutes of each other
+    private IEnumerable<IGrouping<DateTime, CalendarEvent>> GroupConcurrentEvents(
+        IEnumerable<CalendarEvent> events)
+    {
+        return events
+            .OrderBy(e => e.StartTime)
+            .GroupBy(e => 
+            {
+                // Round to nearest 5-minute window
+                var time = e.StartTime;
+                var totalMinutes = time.Hour * 60 + time.Minute;
+                var windowIndex = totalMinutes / ConcurrentEventWindowMinutes;
+                return new DateTime(time.Year, time.Month, time.Day, 0, 0, 0)
+                    .AddMinutes(windowIndex * ConcurrentEventWindowMinutes);
+            });
+    }
+    
+    public async Task ProcessNotificationsAsync()
+    {
+        var allEvents = await GetFilteredEventsAsync();
+        var eventGroups = GroupConcurrentEvents(allEvents);
+        
+        foreach (var group in eventGroups)
+        {
+            var concurrentEvents = group.ToList();
+            
+            if (concurrentEvents.Count == 1)
+            {
+                // Single event - traditional modal
+                await _uiDispatcher.ShowNotificationModalAsync(concurrentEvents[0]);
+            }
+            else
+            {
+                // Multiple concurrent events - multi-event modal
+                await _uiDispatcher.ShowMultiEventModalAsync(concurrentEvents);
+            }
+        }
+    }
+}
+
+// Feature: NotificationManagement/NotificationModal.xaml
+// XAML structure for multi-event modal:
+// <Window>
+//   <ScrollViewer MaxHeight="600">
+//     <ItemsControl ItemsSource="{Binding CurrentEvents}">
+//       <ItemTemplate>
+//         <Border BorderBrush="Gray" Margin="5">
+//           <StackPanel>
+//             <TextBlock Text="{Binding Event.Title}" FontWeight="Bold" />
+//             <TextBlock Text="{Binding Event.StartTime}" />
+//             <TextBlock Text="{Binding Event.Provider}" FontStyle="Italic" />
+//             <StackPanel Orientation="Horizontal">
+//               <Button Content="Snooze" Command="{Binding SnoozeCommand}" />
+//               <Button Content="Dismiss" Command="{Binding DismissCommand}" />
+//               <Button Content="Dismiss All Future" Command="{Binding DismissAllFutureCommand}" />
+//             </StackPanel>
+//           </StackPanel>
+//         </Border>
+//       </ItemTemplate>
+//     </ItemsControl>
+//   </ScrollViewer>
+// </Window>
+```
+
+**Rationale**:
+- Prevents multiple overlapping modals from cluttering the screen
+- Allows users to action each event independently within a single modal
+- Modal remains open until all events are actioned
+- 5-minute window groups events that are "close enough" to be considered concurrent
+- Scrollable list handles any number of concurrent events
+- Each event displays provider information (important for multi-account scenarios)
+- Individual action buttons provide granular control over each event
+
+### 14. Multiple Accounts Per Provider Pattern
+
+Users can configure multiple accounts for the same provider type (e.g., "Personal Google", "Work Google"):
+
+```csharp
+// Feature: ConfigurationManagement/ProviderCredentials.cs
+public class ProviderCredentials
+{
+    public int Id { get; set; }
+    public string ProviderType { get; set; } // "outlook" or "google"
+    public string AccountLabel { get; set; } // "Personal Google", "Work Outlook365"
+    public string EncryptedAccessToken { get; set; }
+    public string EncryptedRefreshToken { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public DateTime LastSyncTime { get; set; }
+}
+
+// Feature: ConfigurationManagement/ProviderSelectionViewModel.cs
+public class ProviderSelectionViewModel : ObservableObject
+{
+    private string _accountLabel;
+    public string AccountLabel
+    {
+        get => _accountLabel;
+        set => SetProperty(ref _accountLabel, value);
+    }
+    
+    public async Task AddProviderAsync(string providerType)
+    {
+        // Prompt user for account label
+        if (string.IsNullOrWhiteSpace(AccountLabel))
+        {
+            AccountLabel = $"{providerType} Account {DateTime.Now:yyyyMMdd-HHmmss}";
+        }
+        
+        // Check if label already exists
+        var existing = await _credentialsRepository.GetByLabelAsync(providerType, AccountLabel);
+        if (existing != null)
+        {
+            throw new InvalidOperationException(
+                $"An account with label '{AccountLabel}' already exists for {providerType}");
+        }
+        
+        // Proceed with OAuth
+        var credentials = await _oauthService.AuthenticateAsync(providerType);
+        credentials.AccountLabel = AccountLabel;
+        
+        await _credentialsRepository.SaveAsync(credentials);
+    }
+}
+
+// Feature: ConfigurationManagement/ConfigurationDialogViewModel.cs
+public class ConfigurationDialogViewModel : ObservableObject
+{
+    public ObservableCollection<ProviderAccountItem> ConfiguredAccounts { get; }
+    
+    public async Task LoadAccountsAsync()
+    {
+        var credentials = await _credentialsRepository.GetAllAsync();
+        
+        ConfiguredAccounts.Clear();
+        foreach (var cred in credentials)
+        {
+            ConfiguredAccounts.Add(new ProviderAccountItem
+            {
+                Id = cred.Id,
+                ProviderType = cred.ProviderType,
+                AccountLabel = cred.AccountLabel,
+                LastSyncTime = cred.LastSyncTime,
+                IsEnabled = true
+            });
+        }
+    }
+}
+
+public class ProviderAccountItem : ObservableObject
+{
+    public int Id { get; set; }
+    public string ProviderType { get; set; }
+    public string AccountLabel { get; set; } // Displayed in UI
+    public DateTime LastSyncTime { get; set; }
+    public bool IsEnabled { get; set; }
+    
+    public string DisplayName => $"{AccountLabel} ({ProviderType})";
+}
+```
+
+**Rationale**:
+- Supports users with multiple accounts per calendar provider (e.g., personal + work Google accounts)
+- AccountLabel provides user-friendly identification of each account
+- UNIQUE constraint on (CalendarProvider, AccountLabel) prevents duplicate labels
+- Each account has independent credentials and calendar selections
+- Configuration dialog shows all accounts with their labels
+- Notifications display account label along with calendar provider for clarity
+
+### 14.5. Automatic Token Refresh Pattern
+
+OAuth tokens are automatically refreshed before expiration with a grace period:
+
+```csharp
+// Feature: CalendarIntegration/TokenRefreshService.cs
+public class TokenRefreshService
+{
+    private const int RefreshGracePeriodMinutes = 5; // Refresh 5 minutes before expiry
+    private readonly ILogger<TokenRefreshService> _logger;
+    private readonly IProviderCredentialsRepository _credentialsRepository;
+    private readonly IAsyncPolicy _tokenRefreshPolicy;
+    
+    public TokenRefreshService(
+        ILogger<TokenRefreshService> logger,
+        IProviderCredentialsRepository credentialsRepository)
+    {
+        _logger = logger;
+        _credentialsRepository = credentialsRepository;
+        
+        // Polly policy: 2 retries with exponential backoff for token refresh
+        _tokenRefreshPolicy = Policy
+            .Handle<HttpRequestException>()
+            .Or<TimeoutException>()
+            .WaitAndRetryAsync(
+                retryCount: 2,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (exception, timeSpan, retryCount, context) =>
+                {
+                    _logger.LogWarning(exception, 
+                        $"Token refresh failed (attempt {retryCount}). Retrying in {timeSpan.TotalSeconds}s");
+                });
+    }
+    
+    public async Task StartMonitoringAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Token refresh monitoring started");
+        
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await CheckAndRefreshTokensAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during token refresh check");
+            }
+            
+            // Check every minute
+            await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+        }
+    }
+    
+    private async Task CheckAndRefreshTokensAsync()
+    {
+        var credentials = await _credentialsRepository.GetAllAsync();
+        var now = DateTime.UtcNow;
+        
+        foreach (var cred in credentials.Where(c => c.IsEnabled))
+        {
+            // Calculate time until expiration
+            var timeUntilExpiry = cred.ExpiresAt - now;
+            
+            // Refresh if within grace period
+            if (timeUntilExpiry <= TimeSpan.FromMinutes(RefreshGracePeriodMinutes))
+            {
+                _logger.LogInformation(
+                    $"Refreshing token for {cred.AccountLabel} ({cred.CalendarProvider}) - expires in {timeUntilExpiry.TotalMinutes:F1} minutes");
+                
+                await RefreshTokenAsync(cred);
+            }
+        }
+    }
+    
+    private async Task RefreshTokenAsync(ProviderCredentials cred)
+    {
+        try
+        {
+            var newToken = await _tokenRefreshPolicy.ExecuteAsync(async () =>
+            {
+                // Decrypt refresh token
+                var refreshToken = ProtectedData.Unprotect(
+                    Convert.FromBase64String(cred.EncryptedRefreshToken),
+                    null,
+                    DataProtectionScope.CurrentUser);
+                
+                var refreshTokenString = Encoding.UTF8.GetString(refreshToken);
+                
+                // Call provider-specific refresh logic
+                IAuthenticationProvider authProvider = cred.CalendarProvider switch
+                {
+                    "outlook" => _serviceProvider.GetRequiredService<OutlookAuthenticationProvider>(),
+                    "google" => _serviceProvider.GetRequiredService<GoogleAuthenticationProvider>(),
+                    _ => throw new NotSupportedException($"Provider {cred.CalendarProvider} not supported")
+                };
+                
+                return await authProvider.RefreshTokenAsync(refreshTokenString);
+            });
+            
+            // Encrypt and update credentials
+            var encryptedAccessToken = Convert.ToBase64String(
+                ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(newToken.AccessToken),
+                    null,
+                    DataProtectionScope.CurrentUser));
+            
+            var encryptedRefreshToken = Convert.ToBase64String(
+                ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(newToken.RefreshToken),
+                    null,
+                    DataProtectionScope.CurrentUser));
+            
+            cred.EncryptedAccessToken = encryptedAccessToken;
+            cred.EncryptedRefreshToken = encryptedRefreshToken;
+            cred.ExpiresAt = newToken.ExpiresAt;
+            cred.CredentialStatus = "valid";
+            
+            await _credentialsRepository.UpdateAsync(cred);
+            
+            _logger.LogInformation(
+                $"Successfully refreshed token for {cred.AccountLabel}. New expiry: {newToken.ExpiresAt}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to refresh token for {cred.AccountLabel}");
+            
+            // Mark credential as expired
+            cred.CredentialStatus = "expired";
+            await _credentialsRepository.UpdateAsync(cred);
+            
+            // Notify user via system tray
+            _notificationService.ShowSystemTrayWarning(
+                $"Calendar credentials for {cred.AccountLabel} have expired. Please re-authenticate.");
+        }
+    }
+}
+
+// Feature: CalendarIntegration/IAuthenticationProvider.cs
+public interface IAuthenticationProvider
+{
+    Task<TokenResponse> RefreshTokenAsync(string refreshToken);
+    Task<TokenResponse> AuthenticateAsync();
+}
+
+public class TokenResponse
+{
+    public string AccessToken { get; set; }
+    public string RefreshToken { get; set; }
+    public DateTime ExpiresAt { get; set; }
+}
+```
+
+**Rationale**:
+- **Proactive Refresh**: Tokens refreshed 5 minutes before expiration to prevent service interruptions
+- **Background Monitoring**: Runs continuously in background, checking every minute
+- **Polly Resilience**: 2 retries with exponential backoff for transient failures
+- **Graceful Degradation**: On failure, marks credential as expired and notifies user
+- **Secure Storage**: Refresh tokens encrypted with DPAPI before storage
+- **Provider Abstraction**: Works with any authentication provider (Outlook, Google)
+- **User Notification**: System tray warning if token refresh fails
+
+### 15. Event Caching and Modification Detection Pattern
+
+Calendar events are cached locally in SQLite for offline support and modification detection:
+
+```csharp
+// Feature: CalendarIntegration/CalendarEventCache.cs
+public class CalendarEventCache
+{
+    private const int CacheWindowWeeks = 2; // Cache events up to 2 weeks ahead
+    
+    public async Task<IEnumerable<CalendarEvent>> GetEventsWithFallbackAsync(
+        int providerCredentialsId,
+        DateTime startTime,
+        DateTime endTime)
+    {
+        try
+        {
+            // Try live API with Polly policy
+            var remoteEvents = await _pollyPolicy.ExecuteAsync(() =>
+                _calendarProvider.GetEventsAsync(startTime, endTime));
+            
+            // Sync with local cache: detect modifications, additions, deletions
+            await SyncCacheWithRemoteAsync(providerCredentialsId, remoteEvents);
+            
+            return remoteEvents;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Calendar API unavailable, falling back to cached events");
+            
+            // Fall back to cached events
+            return await GetCachedEventsAsync(providerCredentialsId, startTime, endTime);
+        }
+    }
+    
+    private async Task SyncCacheWithRemoteAsync(
+        int providerCredentialsId,
+        IEnumerable<CalendarEvent> remoteEvents)
+    {
+        var cachedEvents = await _dbContext.CachedCalendarEvents
+            .Where(e => e.ProviderCredentialsId == providerCredentialsId)
+            .ToListAsync();
+        
+        var cachedDict = cachedEvents.ToDictionary(e => e.RemoteEventId);
+        var remoteDict = remoteEvents.ToDictionary(e => e.RemoteId);
+        
+        // Detect modifications and updates
+        foreach (var remoteEvent in remoteEvents)
+        {
+            if (cachedDict.TryGetValue(remoteEvent.RemoteId, out var cachedEvent))
+            {
+                // Check if event was modified
+                if (remoteEvent.LastModifiedTime > cachedEvent.LastModifiedTime ||
+                    remoteEvent.StartTime != cachedEvent.StartTime ||
+                    remoteEvent.Title != cachedEvent.Title)
+                {
+                    // Update cached event
+                    UpdateCachedEvent(cachedEvent, remoteEvent);
+                    
+                    // Reschedule notification if start time changed
+                    if (remoteEvent.StartTime != cachedEvent.StartTime)
+                    {
+                        await _notificationEngine.RescheduleNotificationAsync(
+                            remoteEvent.RemoteId,
+                            CalculateNotificationTime(remoteEvent));
+                    }
+                }
+            }
+            else
+            {
+                // New event - add to cache
+                await AddToCacheAsync(providerCredentialsId, remoteEvent);
+            }
+        }
+        
+        // Detect deletions/cancellations
+        foreach (var cachedEvent in cachedEvents)
+        {
+            if (!remoteDict.ContainsKey(cachedEvent.RemoteEventId))
+            {
+                // Event was deleted or cancelled
+                cachedEvent.IsCancelled = true;
+                
+                // Cancel pending notification
+                await _notificationEngine.CancelNotificationAsync(cachedEvent.RemoteEventId);
+            }
+        }
+        
+        await _dbContext.SaveChangesAsync();
+    }
+    
+    private async Task<IEnumerable<CalendarEvent>> GetCachedEventsAsync(
+        int providerCredentialsId,
+        DateTime startTime,
+        DateTime endTime)
+    {
+        return await _dbContext.CachedCalendarEvents
+            .Where(e => e.ProviderCredentialsId == providerCredentialsId &&
+                        e.StartTime >= startTime &&
+                        e.StartTime <= endTime &&
+                        !e.IsCancelled)
+            .Select(e => new CalendarEvent
+            {
+                RemoteId = e.RemoteEventId,
+                Title = e.Title,
+                StartTime = e.StartTime,
+                EndTime = e.EndTime,
+                IsAllDay = e.IsAllDay,
+                Location = e.Location,
+                Description = e.Description,
+                LastModifiedTime = e.LastModifiedTime
+            })
+            .ToListAsync();
+    }
+    
+    private void UpdateCachedEvent(CachedCalendarEvent cached, CalendarEvent remote)
+    {
+        cached.Title = remote.Title;
+        cached.StartTime = remote.StartTime;
+        cached.EndTime = remote.EndTime;
+        cached.IsAllDay = remote.IsAllDay;
+        cached.Location = remote.Location;
+        cached.Description = remote.Description;
+        cached.LastModifiedTime = remote.LastModifiedTime;
+        cached.IsCancelled = remote.IsCancelled;
+        cached.CachedAt = DateTime.UtcNow;
+    }
+    
+    private async Task AddToCacheAsync(int providerCredentialsId, CalendarEvent evt)
+    {
+        var cached = new CachedCalendarEvent
+        {
+            ProviderCredentialsId = providerCredentialsId,
+            RemoteEventId = evt.RemoteId,
+            CalendarId = evt.CalendarId,
+            Title = evt.Title,
+            StartTime = evt.StartTime,
+            EndTime = evt.EndTime,
+            IsAllDay = evt.IsAllDay,
+            Location = evt.Location,
+            Description = evt.Description,
+            LastModifiedTime = evt.LastModifiedTime,
+            IsCancelled = false,
+            CachedAt = DateTime.UtcNow
+        };
+        
+        _dbContext.CachedCalendarEvents.Add(cached);
+    }
+}
+
+// Feature: CalendarIntegration/CalendarSyncService.cs
+public class CalendarSyncService
+{
+    private const int CacheWindowWeeks = 2;
+    private const int OldEventCleanupWeeks = 2; // Delete events older than 2 weeks
+    
+    public async Task SyncAllProvidersAsync()
+    {
+        var providers = await _credentialsRepository.GetAllAsync();
+        
+        foreach (var provider in providers.Where(p => p.IsEnabled))
+        {
+            try
+            {
+                var startTime = DateTime.Now;
+                var endTime = startTime.AddDays(CacheWindowWeeks * 7); // 2 weeks ahead
+                
+                // Sync events with cache and modification detection
+                await _eventCache.GetEventsWithFallbackAsync(
+                    provider.Id,
+                    startTime,
+                    endTime);
+                
+                provider.LastSyncTime = DateTime.UtcNow;
+                await _credentialsRepository.UpdateAsync(provider);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to sync calendar provider {provider.AccountLabel}");
+            }
+        }
+        
+        // Cleanup old events (older than 2 weeks in the past)
+        await CleanupOldEventsAsync();
+    }
+    
+    private async Task CleanupOldEventsAsync()
+    {
+        var cutoffDate = DateTime.Now.AddDays(-OldEventCleanupWeeks * 7);
+        
+        var deletedCount = await _dbContext.CachedCalendarEvents
+            .Where(e => e.EndTime < cutoffDate)
+            .ExecuteDeleteAsync();
+        
+        if (deletedCount > 0)
+        {
+            _logger.LogInformation($"Cleaned up {deletedCount} old cached events (older than {cutoffDate:yyyy-MM-dd})");
+        }
+    }
+    
+    // Periodic sync every 5 minutes (configurable)
+    public async Task StartPeriodicSyncAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await SyncAllProvidersAsync();
+            
+            var syncInterval = await _configService.GetSyncIntervalSecondsAsync();
+            await Task.Delay(TimeSpan.FromSeconds(syncInterval), cancellationToken);
+        }
+    }
+}
+```
+
+**Rationale**:
+- **Offline Support**: Application continues showing notifications even without internet connection
+- **2-Week Cache Window**: Sufficient lookahead for most users' scheduling needs
+- **Modification Detection**: Compares LastModifiedTime, StartTime, and Title to detect changes
+- **Automatic Rescheduling**: When event time changes, notification is automatically rescheduled
+- **Cancellation Handling**: Deleted/cancelled events marked in cache and notifications cancelled
+- **Old Event Cleanup**: Events older than 2 weeks automatically deleted to prevent database bloat
+- **Performance**: Indexed queries on StartTime and ProviderCredentialsId for fast retrieval
+- **Resilience**: Polly policies protect API calls, with automatic fallback to cache on failure
+- **Data Freshness**: Regular sync (every 5 minutes default) keeps cache up-to-date
+
+---
+
+## UI Specifications
+
+### ConfigurationDialog UI Layout
+
+The configuration dialog uses a tabbed interface for organizing settings:
+
+```csharp
+// Feature: ConfigurationManagement/ConfigurationDialog.xaml.cs
+public partial class ConfigurationDialog : Window
+{
+    public ConfigurationDialog(ConfigurationDialogViewModel viewModel)
+    {
+        InitializeComponent();
+        DataContext = viewModel;
+    }
+}
+
+// Feature: ConfigurationManagement/ConfigurationDialogViewModel.cs
+public class ConfigurationDialogViewModel : ObservableObject
+{
+    public ObservableCollection<ProviderAccountItem> ConfiguredProviders { get; }
+    public ObservableCollection<string> DismissedEventTitles { get; }
+    
+    // Notification Settings properties
+    private int _notificationLeadTimeMinutes = 3;
+    public int NotificationLeadTimeMinutes
+    {
+        get => _notificationLeadTimeMinutes;
+        set => SetProperty(ref _notificationLeadTimeMinutes, value);
+    }
+    
+    private int _autoDismissTimeoutMinutes = 10;
+    public int AutoDismissTimeoutMinutes
+    {
+        get => _autoDismissTimeoutMinutes;
+        set => SetProperty(ref _autoDismissTimeoutMinutes, value);
+    }
+    
+    private int _syncIntervalSeconds = 300;
+    public int SyncIntervalSeconds
+    {
+        get => _syncIntervalSeconds;
+        set => SetProperty(ref _syncIntervalSeconds, value);
+    }
+    
+    // Application version
+    public string ApplicationVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString();
+    
+    // Commands
+    public ICommand AddProviderCommand { get; }
+    public ICommand RemoveProviderCommand { get; }
+    public ICommand SelectCalendarsCommand { get; }
+    public ICommand RestoreDismissedTitleCommand { get; }
+    public ICommand ClearAllDismissedTitlesCommand { get; }
+    public ICommand SaveCommand { get; }
+    public ICommand CancelCommand { get; }
+}
+```
+
+**XAML Structure** (ConfigurationDialog.xaml):
+
+```xml
+<Window x:Class="ConfigurationDialog"
+        Title="Settings" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <TabControl>
+        <!-- Tab 1: Calendar Providers -->
+        <TabItem Header="Calendar Providers">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Provider List -->
+                <TextBlock Grid.Row="0" Text="Configured Calendar Providers" 
+                           FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                
+                <DataGrid Grid.Row="1" ItemsSource="{Binding ConfiguredProviders}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Provider" 
+                                            Binding="{Binding CalendarProvider}" Width="100"/>
+                        <DataGridTextColumn Header="Account Label" 
+                                            Binding="{Binding AccountLabel}" Width="200"/>
+                        <DataGridTextColumn Header="Last Sync" 
+                                            Binding="{Binding LastSyncTime, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Width="150"/>
+                        <DataGridTemplateColumn Header="Actions" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Select Calendars" Margin="5,0"
+                                                Command="{Binding DataContext.SelectCalendarsCommand, 
+                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="Remove" Margin="5,0"
+                                                Command="{Binding DataContext.RemoveProviderCommand, 
+                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                
+                <!-- Add Provider Button -->
+                <Button Grid.Row="2" Content="Add Calendar Provider" 
+                        Command="{Binding AddProviderCommand}"
+                        HorizontalAlignment="Left" Margin="0,10,0,0" Padding="20,5"/>
+            </Grid>
+        </TabItem>
+        
+        <!-- Tab 2: Notification Settings -->
+        <TabItem Header="Notification Settings">
+            <StackPanel Margin="20">
+                <TextBlock Text="Notification Settings" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                
+                <!-- Notification Lead Time -->
+                <Grid Margin="0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Notification lead time (minutes):" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Slider Width="200" Minimum="1" Maximum="60" 
+                                Value="{Binding NotificationLeadTimeMinutes}" 
+                                TickFrequency="5" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding NotificationLeadTimeMinutes}" 
+                                   VerticalAlignment="Center" Margin="10,0,0,0" Width="30"/>
+                    </StackPanel>
+                </Grid>
+                
+                <!-- Auto-Dismiss Timeout -->
+                <Grid Margin="0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Auto-dismiss after event starts (minutes):" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Slider Width="200" Minimum="5" Maximum="120" 
+                                Value="{Binding AutoDismissTimeoutMinutes}" 
+                                TickFrequency="5" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding AutoDismissTimeoutMinutes}" 
+                                   VerticalAlignment="Center" Margin="10,0,0,0" Width="30"/>
+                    </StackPanel>
+                </Grid>
+                
+                <!-- Sync Interval -->
+                <Grid Margin="0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Calendar sync interval (seconds):" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Slider Width="200" Minimum="60" Maximum="600" 
+                                Value="{Binding SyncIntervalSeconds}" 
+                                TickFrequency="60" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding SyncIntervalSeconds}" 
+                                   VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
+                    </StackPanel>
+                </Grid>
+                
+                <TextBlock Text="Changes take effect immediately after clicking Save." 
+                           Margin="0,20,0,0" FontStyle="Italic" Foreground="Gray"/>
+            </StackPanel>
+        </TabItem>
+        
+        <!-- Tab 3: Dismissed Events -->
+        <TabItem Header="Dismissed Events">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Text="Dismissed Event Titles" 
+                           FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                
+                <ListBox Grid.Row="1" ItemsSource="{Binding DismissedEventTitles}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="Restore" Margin="10,0,0,0"
+                                        Command="{Binding DataContext.RestoreDismissedTitleCommand, 
+                                                 RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                
+                <Button Grid.Row="2" Content="Clear All" 
+                        Command="{Binding ClearAllDismissedTitlesCommand}"
+                        HorizontalAlignment="Left" Margin="0,10,0,0" Padding="20,5"/>
+            </Grid>
+        </TabItem>
+        
+        <!-- Tab 4: About -->
+        <TabItem Header="About">
+            <StackPanel Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Modal Calendar Notification" 
+                           FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding ApplicationVersion, StringFormat=Version {0}}" 
+                           FontSize="14" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                <TextBlock Text="© 2026 Your Company" 
+                           HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                <TextBlock Text="A Windows application for intrusive calendar notifications" 
+                           HorizontalAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap" Width="400"/>
+            </StackPanel>
+        </TabItem>
+    </TabControl>
+    
+    <!-- Dialog Buttons -->
+    <Grid VerticalAlignment="Bottom" Background="LightGray" Height="50">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+            <Button Content="Save" Command="{Binding SaveCommand}" 
+                    Padding="20,5" Margin="5"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" 
+                    Padding="20,5" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
+```
+
+### Provider Configuration Workflow
+
+1. **Click "Add Calendar Provider"** → Opens `ProviderSelectionDialog`
+2. **User selects provider type** (Outlook365 or Google Calendar) → Prompts for account label
+3. **User enters account label** (e.g., "Personal Google", "Work Outlook365")
+4. **OAuth login screen appears** → Browser window opens for authentication
+5. **On success** → `ProviderCredentials` created and encrypted
+6. **CalendarSelectionDialog appears** → Shows all available calendars from provider
+7. **User selects calendars to monitor** → All selected by default, can uncheck
+8. **User clicks "Apply"** → Selections saved to `SelectedCalendars` table
+9. **Dialog closes** → Provider appears in list with account label
+
+### ProviderSelectionDialog
+
+```xml
+<Window x:Class="ProviderSelectionDialog"
+        Title="Add Calendar Provider" Height="300" Width="500"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="20">
+        <TextBlock Text="Select Calendar Provider" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+        
+        <!-- Provider Type Selection -->
+        <TextBlock Text="Provider Type:" Margin="0,10,0,5"/>
+        <ComboBox ItemsSource="{Binding AvailableProviders}" 
+                  SelectedItem="{Binding SelectedProvider}"/>
+        
+        <!-- Account Label Input -->
+        <TextBlock Text="Account Label:" Margin="0,20,0,5"/>
+        <TextBox Text="{Binding AccountLabel}" 
+                 ToolTip="Enter a unique label to identify this account (e.g., 'Personal Google', 'Work Outlook365')"/>
+        
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,40,0,0">
+            <Button Content="Authenticate" Command="{Binding AuthenticateCommand}" 
+                    Padding="20,5" Margin="5"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" 
+                    Padding="20,5" Margin="5"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
+```
+
+### CalendarListDialog
+
+```xml
+<Window x:Class="CalendarListDialog"
+        Title="Select Calendars" Height="400" Width="600"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" Text="Select calendars to monitor for notifications" 
+                   FontSize="14" Margin="0,0,0,10"/>
+        
+        <ListBox Grid.Row="1" ItemsSource="{Binding AvailableCalendars}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox IsChecked="{Binding IsSelected}" 
+                              Content="{Binding CalendarName}"
+                              Margin="5"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Apply" Command="{Binding ApplyCommand}" 
+                    Padding="20,5" Margin="5"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" 
+                    Padding="20,5" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
+```
+
+**Rationale**:
+- **Tabbed Interface**: Organizes related settings, prevents overwhelming single dialog
+- **Clear Visual Hierarchy**: Bold headers, consistent spacing, logical grouping
+- **Sliders for Ranges**: Visual feedback for numeric settings with constraints
+- **Immediate Feedback**: Displays current values next to sliders
+- **Account Label Input**: Allows users to distinguish multiple accounts of same provider
+- **Calendar Checkboxes**: All selected by default, easy to deselect unwanted calendars
+- **Consistent Button Placement**: Save/Cancel at bottom right (Windows convention)
+- **Validation**: Account label uniqueness checked before OAuth
+- **Responsive Design**: Grid/StackPanel layouts adapt to window resizing
 
 ---
 
@@ -917,27 +2347,64 @@ roslynator_compiler_diagnostic_fixes.enabled = true
 -- Configuration
 CREATE TABLE ApplicationConfig (
     Id INTEGER PRIMARY KEY,
-    LeadTimeMinutes INTEGER DEFAULT 3,
-    AutoDismissMinutesAfterStart INTEGER DEFAULT 10,
+    NotificationLeadTimeMinutes INTEGER DEFAULT 3,
+    AutoDismissTimeoutMinutesAfterStart INTEGER DEFAULT 10,
     SyncIntervalSeconds INTEGER DEFAULT 300,
-    ActiveProviderType TEXT, -- 'outlook' or 'google'
     IsInitialized BOOLEAN DEFAULT 0
 );
 
 -- Credentials (OAuth tokens encrypted with DPAPI)
+-- Supports multiple accounts per provider type (e.g., multiple Google Calendar accounts)
 CREATE TABLE ProviderCredentials (
     Id INTEGER PRIMARY KEY,
-    ProviderType TEXT NOT NULL UNIQUE,
+    CalendarProvider TEXT NOT NULL, -- 'outlook' or 'google'
+    AccountLabel TEXT NOT NULL, -- User-provided label: "Personal Google", "Work Google", etc.
     EncryptedAccessToken TEXT NOT NULL,
     EncryptedRefreshToken TEXT,
     ExpiresAt DATETIME,
-    LastSyncTime DATETIME
+    LastSyncTime DATETIME,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(CalendarProvider, AccountLabel) -- Allow multiple accounts of same calendar provider with different labels
 );
+
+-- Selected calendars per provider (user can select which calendars to monitor)
+CREATE TABLE SelectedCalendars (
+    Id INTEGER PRIMARY KEY,
+    ProviderCredentialsId INTEGER NOT NULL,
+    RemoteCalendarId TEXT NOT NULL,
+    CalendarName TEXT NOT NULL,
+    IsSelected BOOLEAN DEFAULT 1,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(ProviderCredentialsId) REFERENCES ProviderCredentials(Id) ON DELETE CASCADE,
+    UNIQUE(ProviderCredentialsId, RemoteCalendarId)
+);
+
+-- Cached calendar events (local cache for offline support, 2 weeks ahead)
+CREATE TABLE CachedCalendarEvents (
+    Id INTEGER PRIMARY KEY,
+    ProviderCredentialsId INTEGER NOT NULL,
+    RemoteEventId TEXT NOT NULL,
+    CalendarId TEXT NOT NULL,
+    Title TEXT NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NOT NULL,
+    IsAllDay BOOLEAN DEFAULT 0,
+    Location TEXT,
+    Description TEXT,
+    LastModifiedTime DATETIME,
+    IsCancelled BOOLEAN DEFAULT 0,
+    CachedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(ProviderCredentialsId) REFERENCES ProviderCredentials(Id) ON DELETE CASCADE,
+    UNIQUE(ProviderCredentialsId, RemoteEventId)
+);
+
+CREATE INDEX idx_cached_events_start_time ON CachedCalendarEvents(StartTime);
+CREATE INDEX idx_cached_events_provider_calendar ON CachedCalendarEvents(ProviderCredentialsId, CalendarId);
 
 -- Dismissed event titles
 CREATE TABLE DismissedEventTitles (
     Id INTEGER PRIMARY KEY,
-    Title TEXT NOT NULL UNIQUE,
+    DismissedEventTitle TEXT NOT NULL UNIQUE,
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1210,13 +2677,16 @@ Array.Clear(tokenBytes, 0, tokenBytes.Length); // ✓ Good practice
 
 **Indexes**:
 ```sql
-CREATE INDEX idx_DismissedTitles_Title ON DismissedEventTitles(Title);
-CREATE INDEX idx_ProviderCredentials_Type ON ProviderCredentials(ProviderType);
+CREATE INDEX idx_DismissedTitles_Title ON DismissedEventTitles(DismissedEventTitle);
+CREATE INDEX idx_ProviderCredentials_Provider ON ProviderCredentials(CalendarProvider);
+CREATE INDEX idx_CachedEvents_StartTime ON CachedCalendarEvents(StartTime);
+CREATE INDEX idx_CachedEvents_ProviderCalendar ON CachedCalendarEvents(ProviderCredentialsId, CalendarId);
 ```
 
 **Queries**:
-- Check dismissed title: O(log n) via index
+- Check dismissed event title: O(log n) via index
 - Load all config: O(1), single row
+- Query cached events by time: O(log n) via StartTime index
 - List snoozed notifications: O(n) where n < 10 typically
 
 ---
@@ -1303,7 +2773,7 @@ tests/ModalCalendarNotification.Tests.Unit/
 │   └── CalendarSyncServiceTests.cs (sync scheduling)
 ├── Notifications/
 │   ├── NotificationEngineTests.cs
-│   │   ├── Test lead time calculation
+│   │   ├── Test notification lead time calculation
 │   │   ├── Test snooze scheduling
 │   │   ├── Test dismiss all future filtering
 │   │   ├── Test auto-dismiss timing
@@ -1330,7 +2800,7 @@ tests/ModalCalendarNotification.Tests.Unit/
 3. **DismissAllFutureWorkflow**: Dismiss all "Daily Standup" → Future "Daily Standup" events don't notify → Other events still notify
 4. **SnoozeWorkflow**: Snooze for 5 minutes → Notification reappears 5 minutes later
 5. **AutoDismissWorkflow**: Untouched notification → Auto-dismiss after 10 minutes → Same event next week still notifies
-6. **ConfigurationPersistenceWorkflow**: Change lead time to 10 minutes → Restart app → Still 10 minutes
+6. **ConfigurationPersistenceWorkflow**: Change notification lead time to 10 minutes → Restart app → Still 10 minutes
 
 ---
 
@@ -1338,7 +2808,7 @@ tests/ModalCalendarNotification.Tests.Unit/
 
 This plan satisfies the following success criteria from the specification:
 
-- **SC-001**: Modal notifications at configured lead time (Notification Engine design)
+- **SC-001**: Modal notifications at configured notification lead time (Notification Engine design)
 - **SC-002**: Startup missed event detection within 24-hour window (MissedEventDetector design)
 - **SC-003**: Modal appears on primary display, stays on top (WPF modal design)
 - **SC-004**: Provider selection and credential setup (ProviderSelectionDialog design)
