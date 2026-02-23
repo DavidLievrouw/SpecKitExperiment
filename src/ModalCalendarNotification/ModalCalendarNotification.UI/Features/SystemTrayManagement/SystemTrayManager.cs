@@ -107,6 +107,11 @@ public sealed class SystemTrayManager : IDisposable
         }
     }
 
+    public ImageSource GetIcon()
+    {
+        return GetApplicationIcon();
+    }
+
     private void AddTaskbarIconToWindow(Window window)
     {
         if (window.Content is Grid grid)
@@ -129,11 +134,98 @@ public sealed class SystemTrayManager : IDisposable
 
     private ImageSource GetApplicationIcon()
     {
-        // Create a simple 16x16 white bitmap and save as .ico file
-        var tempPath = Path.Combine(Path.GetTempPath(), "tray_icon.ico");
+        try
+        {
+            // Load the SystemTrayIconDrawing from the XAML resource
+            var resourceDict = new ResourceDictionary
+            {
+                Source = new Uri(
+                    "pack://application:,,,/ModalCalendarNotification;component/Resources/SystemTrayIcon.xaml",
+                    UriKind.Absolute
+                ),
+            };
 
-        var bitmap = new WriteableBitmap(16, 16, 96, 96, PixelFormats.Bgra32, null);
-        var pixels = new byte[16 * 16 * 4];
+            if (resourceDict.Contains("SystemTrayIconDrawing"))
+            {
+                var drawing = resourceDict["SystemTrayIconDrawing"] as DrawingImage;
+                if (drawing != null)
+                {
+                    _logger.Information("Loaded custom calendar icon from resources");
+                    return ConvertDrawingToIcon(drawing);
+                }
+            }
+
+            _logger.Warning("SystemTrayIconDrawing not found in resources, using fallback");
+            return CreateFallbackIcon();
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "Could not load custom icon, using fallback");
+            return CreateFallbackIcon();
+        }
+    }
+
+    private ImageSource ConvertDrawingToIcon(DrawingImage drawingImage)
+    {
+        // Create a DrawingVisual to render the drawing
+        var drawingVisual = new DrawingVisual();
+        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+        {
+            drawingContext.DrawDrawing(drawingImage.Drawing);
+        }
+
+        // Create a RenderTargetBitmap to render the visual
+        var renderTargetBitmap = new RenderTargetBitmap(32, 32, 96, 96, PixelFormats.Pbgra32);
+        renderTargetBitmap.Render(drawingVisual);
+
+        // Convert to ICO format and save to temp file
+        var tempPath = Path.Combine(Path.GetTempPath(), $"tray_icon_{Guid.NewGuid()}.ico");
+
+        using (var fileStream = new FileStream(tempPath, FileMode.Create))
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
+
+            using (var pngStream = new MemoryStream())
+            {
+                encoder.Save(pngStream);
+                var pngData = pngStream.ToArray();
+
+                // Write ICO file format
+                fileStream.Write(new byte[] { 0, 0 }, 0, 2); // Reserved
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Type: 1 = ICO
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Number of images
+
+                fileStream.WriteByte(32); // Width
+                fileStream.WriteByte(32); // Height
+                fileStream.WriteByte(0); // Color palette
+                fileStream.WriteByte(0); // Reserved
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Color planes
+                fileStream.Write(new byte[] { 32, 0 }, 0, 2); // Bits per pixel
+                fileStream.Write(BitConverter.GetBytes(pngData.Length), 0, 4); // Image size
+                fileStream.Write(BitConverter.GetBytes(22), 0, 4); // Image offset
+
+                fileStream.Write(pngData, 0, pngData.Length);
+            }
+        }
+
+        var bitmapImage = new BitmapImage();
+        bitmapImage.BeginInit();
+        bitmapImage.UriSource = new Uri(tempPath, UriKind.Absolute);
+        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+        bitmapImage.EndInit();
+        bitmapImage.Freeze();
+
+        return bitmapImage;
+    }
+
+    private ImageSource CreateFallbackIcon()
+    {
+        // Create a simple 32x32 white bitmap
+        var tempPath = Path.Combine(Path.GetTempPath(), $"tray_icon_fallback_{Guid.NewGuid()}.ico");
+
+        var bitmap = new WriteableBitmap(32, 32, 96, 96, PixelFormats.Bgra32, null);
+        var pixels = new byte[32 * 32 * 4];
         for (int i = 0; i < pixels.Length; i += 4)
         {
             pixels[i] = 255; // B
@@ -141,9 +233,8 @@ public sealed class SystemTrayManager : IDisposable
             pixels[i + 2] = 255; // R
             pixels[i + 3] = 255; // A
         }
-        bitmap.WritePixels(new Int32Rect(0, 0, 16, 16), pixels, 16 * 4, 0);
+        bitmap.WritePixels(new Int32Rect(0, 0, 32, 32), pixels, 32 * 4, 0);
 
-        // Convert to ICO format
         using (var fileStream = new FileStream(tempPath, FileMode.Create))
         {
             var encoder = new PngBitmapEncoder();
@@ -154,23 +245,19 @@ public sealed class SystemTrayManager : IDisposable
                 encoder.Save(pngStream);
                 var pngData = pngStream.ToArray();
 
-                // Write ICO file format
-                // ICO header
-                fileStream.Write(new byte[] { 0, 0 }, 0, 2); // Reserved
-                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Type: 1 = ICO
-                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Number of images
+                fileStream.Write(new byte[] { 0, 0 }, 0, 2);
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2);
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2);
 
-                // Image directory
-                fileStream.WriteByte(16); // Width
-                fileStream.WriteByte(16); // Height
-                fileStream.WriteByte(0); // Color palette
-                fileStream.WriteByte(0); // Reserved
-                fileStream.Write(new byte[] { 1, 0 }, 0, 2); // Color planes
-                fileStream.Write(new byte[] { 32, 0 }, 0, 2); // Bits per pixel
-                fileStream.Write(BitConverter.GetBytes(pngData.Length), 0, 4); // Image size
-                fileStream.Write(BitConverter.GetBytes(22), 0, 4); // Image offset
+                fileStream.WriteByte(32);
+                fileStream.WriteByte(32);
+                fileStream.WriteByte(0);
+                fileStream.WriteByte(0);
+                fileStream.Write(new byte[] { 1, 0 }, 0, 2);
+                fileStream.Write(new byte[] { 32, 0 }, 0, 2);
+                fileStream.Write(BitConverter.GetBytes(pngData.Length), 0, 4);
+                fileStream.Write(BitConverter.GetBytes(22), 0, 4);
 
-                // Image data
                 fileStream.Write(pngData, 0, pngData.Length);
             }
         }

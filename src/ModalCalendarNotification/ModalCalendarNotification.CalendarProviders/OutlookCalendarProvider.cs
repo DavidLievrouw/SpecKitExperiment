@@ -28,6 +28,6 @@ public sealed class OutlookCalendarProvider : ICalendarProvider
         );
 
         var sourceEvents = new List<OutlookEventModel>();
-        return sourceEvents.Select(OutlookEventMapper.Map).ToList();
+        return sourceEvents.ConvertAll(OutlookEventMapper.Map);
     }
 }

@@ -12,9 +12,7 @@ public sealed class MissedEventDetector
     {
         DateTimeOffset lookbackFloor = nowUtc.AddHours(-24);
         DateTimeOffset effectiveStart =
-            lastRunUtc.HasValue && lastRunUtc.Value > lookbackFloor
-                ? lastRunUtc.Value
-                : lookbackFloor;
+            lastRunUtc > lookbackFloor ? lastRunUtc.Value : lookbackFloor;
 
         return events
             .Where(x => x.StartUtc > effectiveStart && x.StartUtc <= nowUtc)

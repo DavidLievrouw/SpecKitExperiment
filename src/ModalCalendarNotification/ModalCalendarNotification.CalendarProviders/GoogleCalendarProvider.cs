@@ -31,6 +31,6 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         );
 
         var sourceEvents = new List<GoogleEventModel>();
-        return sourceEvents.Select(GoogleEventMapper.Map).ToList();
+        return sourceEvents.ConvertAll(GoogleEventMapper.Map);
     }
 }

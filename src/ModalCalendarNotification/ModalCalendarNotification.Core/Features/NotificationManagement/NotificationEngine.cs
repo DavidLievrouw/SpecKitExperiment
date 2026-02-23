@@ -58,12 +58,15 @@ public sealed class NotificationEngine : INotificationEngine
         DateTimeOffset cutoff = nowUtc.AddMinutes(leadTimeMinutes);
 
         List<Notification> notifications = events
-            .Where(x => !dismissedTitles.Contains(x.Title))
             .Where(x =>
-                !enforceCalendarSelection
-                || selectedCalendarKeys.Contains(BuildCalendarKey(x.Provider, x.CalendarId))
+                !dismissedTitles.Contains(x.Title)
+                && (
+                    !enforceCalendarSelection
+                    || selectedCalendarKeys.Contains(BuildCalendarKey(x.Provider, x.CalendarId))
+                )
+                && x.StartUtc >= nowUtc
+                && x.StartUtc <= cutoff
             )
-            .Where(x => x.StartUtc >= nowUtc && x.StartUtc <= cutoff)
             .Select(x => new Notification
             {
                 Id = Guid.NewGuid().ToString("N"),
