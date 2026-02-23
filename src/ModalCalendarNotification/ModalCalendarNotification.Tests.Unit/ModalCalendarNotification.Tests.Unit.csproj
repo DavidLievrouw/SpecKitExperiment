@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ModalCalendarNotification\ModalCalendarNotification.Core\ModalCalendarNotification.Core.csproj" />
-    <ProjectReference Include="..\..\src\ModalCalendarNotification\ModalCalendarNotification.Data\ModalCalendarNotification.Data.csproj" />
-    <ProjectReference Include="..\..\src\ModalCalendarNotification\ModalCalendarNotification.CalendarProviders\ModalCalendarNotification.CalendarProviders.csproj" />
-    <ProjectReference Include="..\..\src\ModalCalendarNotification\ModalCalendarNotification.UI\ModalCalendarNotification.UI.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.Core\ModalCalendarNotification.Core.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.Data\ModalCalendarNotification.Data.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.CalendarProviders\ModalCalendarNotification.CalendarProviders.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.UI\ModalCalendarNotification.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -13,9 +13,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.UI", "ModalCalendarNotification.UI\ModalCalendarNotification.UI.csproj", "{3F4B8DC9-4186-4DFE-B4DA-6DB1AFAF6C57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.Tests.Unit", "..\..\tests\ModalCalendarNotification.Tests.Unit\ModalCalendarNotification.Tests.Unit.csproj", "{14558D4A-E587-4184-B01B-AFDEF37F6A2B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.Tests.Unit", "ModalCalendarNotification.Tests.Unit\ModalCalendarNotification.Tests.Unit.csproj", "{14558D4A-E587-4184-B01B-AFDEF37F6A2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.Tests.EndToEnd", "..\..\tests\ModalCalendarNotification.Tests.EndToEnd\ModalCalendarNotification.Tests.EndToEnd.csproj", "{736A45E3-6286-489E-B16A-4230E5D90286}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModalCalendarNotification.Tests.EndToEnd", "ModalCalendarNotification.Tests.EndToEnd\ModalCalendarNotification.Tests.EndToEnd.csproj", "{736A45E3-6286-489E-B16A-4230E5D90286}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{B372DD87-FE57-4E74-97A2-E299E6EA3E41}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Directory.Packages.props = ..\..\Directory.Packages.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
