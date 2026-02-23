@@ -1,0 +1,17 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Assets/">
+    <File Path="../../Directory.Packages.props" />
+  </Folder>
+  <Project Path="ModalCalendarNotification.CalendarProviders/ModalCalendarNotification.CalendarProviders.csproj" />
+  <Project Path="ModalCalendarNotification.Core/ModalCalendarNotification.Core.csproj" />
+  <Project Path="ModalCalendarNotification.Data/ModalCalendarNotification.Data.csproj" />
+  <Project Path="ModalCalendarNotification.Tests.EndToEnd/ModalCalendarNotification.Tests.EndToEnd.csproj" />
+  <Project Path="ModalCalendarNotification.Tests.Unit/ModalCalendarNotification.Tests.Unit.csproj" />
+  <Project Path="ModalCalendarNotification.UI/ModalCalendarNotification.UI.csproj" />
+  <Project Path="ModalCalendarNotification/ModalCalendarNotification.csproj" />
+</Solution>
