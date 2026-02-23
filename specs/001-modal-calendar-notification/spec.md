@@ -23,6 +23,14 @@
 - Q: First-time credential configuration missed events behavior → A: When credentials are added for the first time during initial setup, the system MUST NOT display missed events from the previous 24 hours. Missed event startup notifications only apply to subsequent application restarts after credentials are already configured.
 - Q: Auto-dismiss of untouched notifications → A: Notifications that remain in the modal state and are not touched by the user (no snooze, dismiss, or dismiss all future action taken) MUST be automatically dismissed after a configurable number of minutes following the event's start time (configurable by end users, default: 10 minutes post-event-start).
 
+### Session 2026-02-23 (Multi-Provider & Multi-Calendar Support)
+
+- Q: Multiple calendar provider support → A: Application MUST support configuring multiple calendar providers simultaneously (Office365 AND Google Calendar can both be configured and active at the same time).
+- Q: Multiple calendars per provider → A: Each configured calendar provider may have multiple calendars available (e.g., "Personal Calendar", "Work Calendar", "Team Calendar"). The application MUST allow users to select which calendars to include in notifications.
+- Q: Calendar selection UI and defaults → A: After configuring credentials for a calendar provider, a list of available calendars from that provider MUST be displayed. All calendars MUST be selected by default, but users MUST be able to unselect specific calendars they don't want notifications from.
+- Q: Notification union behavior → A: Notifications MUST show events from the union of all selected calendars across all configured providers. Users see a single unified notification stream.
+- Q: Configuration dialog capabilities → A: The Settings dialog MUST allow: adding multiple calendar providers (Office365 and/or Google Calendar), managing which calendars are included per provider, removing a provider entirely, and toggling calendars on/off without re-authenticating.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Receive Intrusive Event Notifications (Priority: P1)
@@ -81,7 +89,27 @@ As a user, I want to configure which calendar provider I'm using and how far in 
 
 ---
 
-### User Story 4 - System Tray Presence and Quick Access (Priority: P4)
+### User Story 5 - Configure Multiple Calendar Providers and Select Calendars (Priority: P2)
+
+As a power user with multiple calendar sources (personal and work calendars across different providers), I want to configure multiple calendar providers simultaneously and select specific calendars from each provider to aggregate notifications, so that I receive unified event notifications from all my calendar sources without missing important events.
+
+**Why this priority**: This enables users with complex calendar scenarios to use the application effectively while remaining backward compatible with single-provider users. It directly addresses the need for a unified notification stream across multiple sources.
+
+**Independent Test**: Can be fully tested by configuring Office365 credentials, retrieving calendars, selecting specific calendars, configuring Google Calendar credentials, selecting its calendars, and verifying that notifications appear for events from both selected calendars across both providers.
+
+**Acceptance Scenarios**:
+
+1. **Given** the configuration dialog is open and I have no providers configured, **When** I click "Add Calendar Provider", **Then** I see a list of available providers (Microsoft Outlook365, Google Calendar)
+2. **Given** I have configured Microsoft Outlook365 as a provider, **When** I am shown the list of available calendars from that provider, **Then** all calendars are selected by default (indicated by checked checkboxes)
+3. **Given** calendars from a provider are displayed with selection checkboxes, **When** I uncheck specific calendars I don't want notifications from, **Then** those calendars are deselected and notifications will not appear for their events
+4. **Given** I have selected calendars from Microsoft Outlook365, **When** I click "Add Another Provider" and configure Google Calendar, **Then** both providers are active and I can select calendars from Google Calendar independently
+5. **Given** I have multiple calendar providers configured, **When** events occur from different selected calendars across both providers, **Then** all events appear in a single unified notification stream with the provider indicated for each event
+6. **Given** I have configured multiple providers, **When** I access the configuration dialog, **Then** I can see all configured providers listed with their authentication status
+7. **Given** a provider is configured, **When** I click "Remove Provider" next to that provider, **Then** the provider is removed and no further notifications appear for that provider's events
+8. **Given** I have calendars deselected for a provider, **When** I return to the configuration dialog later, **Then** my calendar selections are preserved exactly as I configured them
+9. **Given** calendars are deselected for a provider, **When** I decide to include them later, **Then** I can check the checkboxes again without re-authenticating with the provider
+
+---
 
 As a user, I want the application to run unobtrusively in the system tray with quick access to settings, so that it doesn't clutter my taskbar but remains easily accessible when I need to configure it.
 
@@ -149,107 +177,161 @@ As a user, I want the application to run unobtrusively in the system tray with q
   - Auto-dismiss timeout is configurable by end users through the configuration dialog
   - Auto-dismissed notifications do not persist as dismissed event titles and will trigger notifications for future occurrences
 
+- What happens when a user configures multiple calendar providers with overlapping events (same event appears in multiple providers)?
+  - System should detect and deduplicate events based on unique event identifier within each provider
+  - Events from different providers are treated as separate notifications even if they have the same details
+  - Users will receive separate notifications for events from each provider, even if identical
+  
+- What happens when a user removes a calendar provider completely?
+  - All calendars from that provider are immediately deselected from the notification stream
+  - Events from that provider cease to appear in notifications
+  - Previously retrieved cached events from that provider should not trigger new notifications
+  - User can re-add the same provider later and will need to select calendars again
+  
+- What happens when a user deselects all calendars from a provider while keeping other providers active?
+  - The provider configuration remains active in the system
+  - No events from that provider appear in the notification stream
+  - Calendar synchronization continues for that provider (for potential future re-selection)
+  - User can re-select calendars from that provider at any time without re-authentication
+  
+- What happens when a user deselects all calendars across all configured providers?
+  - The system should warn the user that no notifications will be shown
+  - User should be able to proceed or cancel the action
+  - If confirmed, no notifications are shown until at least one calendar is selected again
+  
+- How does the system handle authentication failures for one provider when multiple providers are configured?
+  - Failed provider should be marked as disconnected in the system tray and configuration dialog
+  - Notifications from other providers continue normally
+  - User is prompted to re-authenticate the failed provider
+  - Events from the failed provider are not included in the notification stream until reconnected
+  
+- What happens when a provider's available calendars list changes (e.g., user adds a new calendar in Outlook365 while the app is running)?
+  - On the next calendar sync, the new calendars should appear in the provider's calendar list
+  - New calendars default to selected state
+  - User can immediately deselect them if not desired
+  
+- What happens when the system tray icon indicates connection status for multiple providers?
+  - Icon should reflect the overall health of the system (fully connected, partially connected, disconnected)
+  - Tooltip or status view should show the individual status of each provider
+  - "Fully connected" = all configured providers are connected
+  - "Partially connected" = at least one provider is connected but not all
+  - "Disconnected" = no providers are connected
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 **Calendar Integration**
 
-- **FR-001**: System MUST support integration with both Microsoft Outlook365 and Google Calendar providers in version 1.0
+- **FR-001**: System MUST support simultaneous integration with multiple calendar providers, specifically Microsoft Outlook365 AND Google Calendar, both active and configured at the same time in version 1.0
 - **FR-002**: System MUST be architecturally designed to support additional calendar providers through extensible provider interfaces
 - **FR-003**: System MUST authenticate users with their selected calendar provider using OAuth 2.0 protocol
-- **FR-004**: System MUST synchronize calendar events at configurable intervals (default: every 5 minutes)
-- **FR-005**: System MUST handle calendar API connection failures gracefully and attempt automatic reconnection
-- **FR-006**: System MUST retrieve event attributes including: title, start time, end time, and unique event identifier
+- **FR-004**: System MUST synchronize calendar events at configurable intervals (default: every 5 minutes) from all configured calendar providers
+- **FR-005**: System MUST handle calendar API connection failures gracefully and attempt automatic reconnection for each configured provider independently
+- **FR-006**: System MUST retrieve event attributes including: title, start time, end time, unique event identifier, and source provider name
+- **FR-007**: System MUST support multiple calendars per provider (e.g., Personal Calendar, Work Calendar, Team Calendar)
+- **FR-008**: System MUST retrieve the list of available calendars from each configured provider after credential authentication
+- **FR-009**: System MUST default to selecting all available calendars from a provider when first configured
+- **FR-010**: System MUST allow users to select and deselect specific calendars per provider without requiring re-authentication
+- **FR-011**: System MUST aggregate events from the union of all selected calendars across all configured providers into a single notification stream
+- **FR-012**: System MUST include provider information in notifications to distinguish events from different sources when multiple providers are configured
 
 **Notification Display**
 
-- **FR-007**: System MUST display a modal dialog on the primary display at a configurable time before each event starts (default: 3 minutes)
-- **FR-008**: Modal dialog MUST show the event title
-- **FR-009**: Modal dialog MUST appear on top of all other windows and require user interaction to dismiss
-- **FR-010**: Modal dialog MUST remain visible until the user takes action (snooze, dismiss, or dismiss all future)
-- **FR-011**: System MUST support displaying multiple concurrent events in a single modal if they occur simultaneously
+- **FR-013**: System MUST display a modal dialog on the primary display at a configurable time before each event starts (default: 3 minutes)
+- **FR-014**: Modal dialog MUST show the event title and indicate the source calendar provider when multiple providers are configured
+- **FR-015**: Modal dialog MUST appear on top of all other windows and require user interaction to dismiss
+- **FR-016**: Modal dialog MUST remain visible until the user takes action (snooze, dismiss, or dismiss all future)
+- **FR-017**: System MUST support displaying multiple concurrent events from different calendars and providers in a single modal if they occur simultaneously
 
 **Notification Actions**
 
-- **FR-012**: Users MUST be able to snooze a notification for a user-selectable duration
-- **FR-013**: System MUST provide preset snooze duration options (1 minute, 3 minutes, 5 minutes, 10 minutes) and allow custom duration input with 1-minute granularity
-- **FR-014**: Users MUST be able to dismiss a single event notification
-- **FR-015**: Users MUST be able to dismiss all future notifications for events with the same title
-- **FR-016**: System MUST maintain a persistent list of event titles for which all future notifications have been dismissed
-- **FR-017**: System MUST prevent notifications for events matching dismissed titles
+- **FR-018**: Users MUST be able to snooze a notification for a user-selectable duration
+- **FR-019**: System MUST provide preset snooze duration options (1 minute, 3 minutes, 5 minutes, 10 minutes) and allow custom duration input with 1-minute granularity
+- **FR-020**: Users MUST be able to dismiss a single event notification
+- **FR-021**: Users MUST be able to dismiss all future notifications for events with the same title (applies across all providers and calendars)
+- **FR-022**: System MUST maintain a persistent list of event titles for which all future notifications have been dismissed
+- **FR-023**: System MUST prevent notifications for events matching dismissed titles regardless of which calendar provider they come from
 
 **Startup Behavior**
 
-- **FR-018**: On application startup, system MUST check for events that were missed since the last notification was shown
-- **FR-019**: If missed events exist, system MUST display a startup modal listing all missed events within the last 24 hours
-- **FR-020**: Startup modal MUST allow users to review missed events and acknowledge them
-- **FR-021**: System MUST persist the timestamp of the last shown notification to disk to survive application restarts
-- **FR-022**: When credentials are added for the first time during initial setup, system MUST NOT display missed events from the previous 24 hours
-- **FR-023**: Events that are displayed in the startup modal are shown only once and never again, even if not explicitly dismissed by the user
-- **FR-024**: System MUST NOT display past events again after the startup phase, except on subsequent application restarts within the 24-hour missed event window
+- **FR-024**: On application startup, system MUST check for events that were missed since the last notification was shown across all configured calendar providers
+- **FR-025**: If missed events exist, system MUST display a startup modal listing all missed events within the last 24 hours from all configured providers and selected calendars
+- **FR-026**: Startup modal MUST allow users to review missed events and acknowledge them
+- **FR-027**: System MUST persist the timestamp of the last shown notification to disk to survive application restarts
+- **FR-028**: When credentials are added for the first time during initial setup, system MUST NOT display missed events from the previous 24 hours
+- **FR-029**: Events that are displayed in the startup modal are shown only once and never again, even if not explicitly dismissed by the user
+- **FR-030**: System MUST NOT display past events again after the startup phase, except on subsequent application restarts within the 24-hour missed event window
 
 **System Tray Integration**
 
-- **FR-025**: Application MUST run as a system tray application (no taskbar window)
-- **FR-026**: System tray icon MUST provide a context menu with access to settings and exit options
-- **FR-027**: System tray icon MUST indicate application status (connected, disconnected, error) through visual changes or tooltip
+- **FR-031**: Application MUST run as a system tray application (no taskbar window)
+- **FR-032**: System tray icon MUST provide a context menu with access to settings and exit options
+- **FR-033**: System tray icon MUST indicate application status (connected to all providers, partially connected, disconnected, error) through visual changes or tooltip
 
 **Notification Auto-Dismiss**
 
-- **FR-028**: If a notification modal remains open and the user takes no action (no snooze, dismiss, or dismiss all future) for a configurable duration after the event start time, the modal MUST automatically dismiss itself
-- **FR-029**: Default auto-dismiss timeout is 10 minutes after event start time (configurable by end users through the configuration dialog)
-- **FR-030**: Auto-dismissed notifications MUST NOT persist as dismissed event titles and MUST trigger notifications for future occurrences of the same event
+- **FR-034**: If a notification modal remains open and the user takes no action (no snooze, dismiss, or dismiss all future) for a configurable duration after the event start time, the modal MUST automatically dismiss itself
+- **FR-035**: Default auto-dismiss timeout is 10 minutes after event start time (configurable by end users through the configuration dialog)
+- **FR-036**: Auto-dismissed notifications MUST NOT persist as dismissed event titles and MUST trigger notifications for future occurrences of the same event
 
 **Configuration Management**
 
-- **FR-031**: System MUST provide a configuration dialog accessible from the system tray
-- **FR-032**: Configuration dialog MUST display a list of supported calendar providers (Microsoft Outlook365, Google Calendar) when adding credentials
-- **FR-033**: Configuration dialog MUST allow users to select a calendar provider before entering provider-specific credentials
-- **FR-034**: Configuration dialog MUST allow users to set up and manage calendar provider credentials for their selected provider
-- **FR-035**: Configuration dialog MUST allow users to configure notification lead time (in minutes)
-- **FR-036**: Configuration dialog MUST allow users to configure auto-dismiss timeout (in minutes)
-- **FR-037**: Configuration dialog MUST allow users to configure calendar synchronization interval
-- **FR-038**: Configuration dialog MUST display a list of event titles for which all future notifications have been dismissed
-- **FR-039**: Configuration dialog MUST allow users to restore notifications for previously dismissed event titles
-- **FR-040**: Configuration dialog MUST display application version information
-- **FR-041**: System MUST persist all configuration settings to survive application restarts
+- **FR-037**: System MUST provide a configuration dialog accessible from the system tray
+- **FR-038**: Configuration dialog MUST display a list of supported calendar providers (Microsoft Outlook365, Google Calendar) when adding credentials
+- **FR-039**: Configuration dialog MUST allow users to select a calendar provider before entering provider-specific credentials
+- **FR-040**: Configuration dialog MUST allow users to add multiple calendar providers and manage each independently
+- **FR-041**: Configuration dialog MUST display a list of available calendars for each configured provider with checkbox selection controls
+- **FR-042**: Configuration dialog MUST allow users to set up and manage calendar provider credentials for each selected provider
+- **FR-043**: Configuration dialog MUST allow users to toggle calendar selection on/off per provider without requiring re-authentication
+- **FR-044**: Configuration dialog MUST allow users to remove a previously configured provider entirely
+- **FR-045**: Configuration dialog MUST allow users to configure notification lead time (in minutes)
+- **FR-046**: Configuration dialog MUST allow users to configure auto-dismiss timeout (in minutes)
+- **FR-047**: Configuration dialog MUST allow users to configure calendar synchronization interval
+- **FR-048**: Configuration dialog MUST display a list of event titles for which all future notifications have been dismissed (applies across all providers)
+- **FR-049**: Configuration dialog MUST allow users to restore notifications for previously dismissed event titles
+- **FR-050**: Configuration dialog MUST display application version information
+- **FR-051**: System MUST persist all configuration settings including all configured providers, selected calendars per provider, and global settings to survive application restarts
 
 **Data Persistence**
 
-- **FR-042**: System MUST persist user configuration (calendar credentials, notification lead time, auto-dismiss timeout, sync interval)
-- **FR-043**: System MUST persist the list of dismissed event titles
-- **FR-044**: System MUST persist the timestamp of the last shown notification
-- **FR-045**: System MUST encrypt sensitive data (OAuth 2.0 tokens and calendar credentials) at rest using Windows DPAPI (Data Protection API)
+- **FR-052**: System MUST persist user configuration for all configured calendar providers (provider type, authentication tokens, connection status)
+- **FR-053**: System MUST persist the selected calendars per provider (calendar IDs and selection state)
+- **FR-054**: System MUST persist global user preferences (notification lead time, auto-dismiss timeout, sync interval)
+- **FR-055**: System MUST persist the list of dismissed event titles
+- **FR-056**: System MUST persist the timestamp of the last shown notification
+- **FR-057**: System MUST encrypt sensitive data (OAuth 2.0 tokens and calendar credentials) at rest using Windows DPAPI (Data Protection API)
 
 **Error Handling**
 
-- **FR-046**: System MUST provide clear error messages when calendar authentication fails
-- **FR-047**: System MUST notify users when calendar synchronization fails
-- **FR-048**: System MUST continue operating with cached event data when temporary connection issues occur
-- **FR-049**: System MUST log errors for troubleshooting purposes
+- **FR-058**: System MUST provide clear error messages when calendar authentication fails for any provider
+- **FR-059**: System MUST notify users when calendar synchronization fails for any configured provider
+- **FR-060**: System MUST continue operating with cached event data from working providers when one provider has temporary connection issues
+- **FR-061**: System MUST log errors for troubleshooting purposes
 
 **Testing Requirements (Constitutional Principle IV)**
 
-- **FR-050**: All end-to-end tests MUST be fully automated, executing complete user workflows from application startup through notification display without manual intervention
-- **FR-051**: Calendar provider APIs (Microsoft Outlook365 and Google Calendar) MUST be mocked or stubbed in E2E tests, not hitting real external services
-- **FR-052**: All user interactions in E2E tests (button clicks, configuration entry, notification dismissal) MUST be automated through test code
-- **FR-053**: E2E test suite MUST be repeatable and deterministic, producing identical results across multiple executions
-- **FR-054**: E2E tests MUST exercise all internal components in real configuration with only external third-party dependencies mocked
+- **FR-062**: All end-to-end tests MUST be fully automated, executing complete user workflows from application startup through notification display without manual intervention
+- **FR-063**: Calendar provider APIs (Microsoft Outlook365 and Google Calendar) MUST be mocked or stubbed in E2E tests, not hitting real external services
+- **FR-064**: All user interactions in E2E tests (button clicks, configuration entry, notification dismissal, provider addition, calendar selection) MUST be automated through test code
+- **FR-065**: E2E test suite MUST be repeatable and deterministic, producing identical results across multiple executions
+- **FR-066**: E2E tests MUST exercise all internal components in real configuration with only external third-party dependencies mocked
 
 ### Key Entities
 
-- **Calendar Event**: Represents a scheduled event from the user's calendar. Key attributes include unique identifier, title (text), start time, end time, and source calendar. Events are retrieved from external calendar providers and cached locally for notification scheduling.
+- **Calendar Event**: Represents a scheduled event from the user's calendar. Key attributes include unique identifier, title (text), start time, end time, source calendar, and source calendar provider. Events are retrieved from external calendar providers and cached locally for notification scheduling.
 
-- **Notification**: Represents a scheduled notification for a calendar event. Key attributes include associated event identifier, scheduled notification time (calculated from event start time minus lead time), notification status (pending, shown, snoozed, dismissed), and snooze duration if applicable. Notifications track the lifecycle of user interactions with event alerts.
+- **Notification**: Represents a scheduled notification for a calendar event. Key attributes include associated event identifier, scheduled notification time (calculated from event start time minus lead time), notification status (pending, shown, snoozed, dismissed), and snooze duration if applicable. Notifications track the lifecycle of user interactions with event alerts and work across all configured providers.
 
-- **Dismissed Event Title**: Represents an event title for which all future notifications have been dismissed. Key attributes include the exact event title text and the timestamp when the dismissal was created. This entity enables filtering of future notifications.
+- **Dismissed Event Title**: Represents an event title for which all future notifications have been dismissed. Key attributes include the exact event title text and the timestamp when the dismissal was created. This entity enables filtering of future notifications across all providers and calendars.
 
-- **Calendar Provider Configuration**: Represents the connection details for a calendar service. Key attributes include provider type (Microsoft Outlook365 or Google Calendar in v1.0, extensible for additional providers), OAuth 2.0 authentication tokens, connection status, and last successful sync timestamp. This entity is designed to support multiple provider types through a common interface.
+- **Calendar Provider Configuration**: Represents the connection details for a calendar service. Key attributes include provider type (Microsoft Outlook365 or Google Calendar in v1.0, extensible for additional providers), OAuth 2.0 authentication tokens, connection status, last successful sync timestamp, and list of available calendars. This entity supports multiple simultaneous provider configurations.
 
-- **Application Configuration**: Represents user preferences and settings. Key attributes include notification lead time (minutes), calendar sync interval (minutes), primary calendar provider selection, and startup behavior preferences. This entity persists user customizations.
+- **Selected Calendar**: Represents a calendar from a specific provider that the user has selected for notifications. Key attributes include provider configuration identifier, calendar ID (from provider), calendar display name, and selection state (selected/deselected). Users can select which calendars from each configured provider contribute to the unified notification stream. All calendars are selected by default when a provider is first configured.
 
-- **Application State**: Represents runtime state that must persist across restarts. Key attributes include last notification shown timestamp, currently snoozed notifications with their wake times, and calendar provider connection health status.
+- **Application Configuration**: Represents user preferences and global settings. Key attributes include notification lead time (minutes), calendar sync interval (minutes), auto-dismiss timeout (minutes), and startup behavior preferences. This entity persists user customizations and applies across all configured providers.
+
+- **Application State**: Represents runtime state that must persist across restarts. Key attributes include last notification shown timestamp, currently snoozed notifications with their wake times, and calendar provider connection health status for each configured provider.
 
 ## Success Criteria *(mandatory)*
 
@@ -281,20 +363,33 @@ As a user, I want the application to run unobtrusively in the system tray with q
 
 - **SC-013**: Application architecture supports adding new calendar provider integrations with changes isolated to provider-specific modules (vendor independence verification)
 
-- **SC-014**: All end-to-end tests execute fully automated from application startup through notification display with no manual intervention required, using mocked calendar provider APIs (Microsoft Outlook365 and Google Calendar), automated user interactions (button clicks, configuration entry), and deterministic, repeatable results aligning with Constitutional Principle IV (Functional End-to-End Testing with third-party dependencies mocked)
+- **SC-014**: Users can configure multiple calendar providers (Microsoft Outlook365 and Google Calendar) simultaneously and have both providers active and syncing at the same time
 
-- **SC-015**: Untouched notification modals automatically dismiss after the configured timeout period (default: 10 minutes post-event-start) and do not persist as dismissed event titles, allowing future occurrences to trigger notifications
+- **SC-015**: Users can select and deselect specific calendars per provider and see notifications only from selected calendars, with selections preserved across application restarts
+
+- **SC-016**: When multiple calendar providers are configured with events, users see a unified notification stream that includes events from the union of all selected calendars from all providers, with provider source indicated when applicable
+
+- **SC-017**: Users can remove a calendar provider entirely within the configuration dialog and immediately stop receiving notifications from that provider
+
+- **SC-018**: Users can toggle calendar selection on/off per provider without requiring re-authentication with the provider
+
+- **SC-019**: All end-to-end tests execute fully automated from application startup through multi-provider notification display with no manual intervention required, using mocked calendar provider APIs (Microsoft Outlook365 and Google Calendar), automated user interactions (button clicks, provider addition, calendar selection), and deterministic, repeatable results aligning with Constitutional Principle IV (Functional End-to-End Testing with third-party dependencies mocked)
+
+- **SC-020**: Untouched notification modals automatically dismiss after the configured timeout period (default: 10 minutes post-event-start) and do not persist as dismissed event titles, allowing future occurrences to trigger notifications
 
 ## Assumptions *(optional)*
 
-- Users have active accounts with supported calendar providers (Microsoft Outlook365 or Google Calendar) with calendar access
-- Version 1.0 MUST support both Microsoft Outlook365 and Google Calendar providers
+- Users may have active accounts with one or more supported calendar providers (Microsoft Outlook365 and/or Google Calendar)
+- Version 1.0 MUST support both Microsoft Outlook365 and Google Calendar providers simultaneously (users can configure both)
+- Each calendar provider may expose multiple calendars to the user (personal, work, team calendars, etc.)
+- When a provider is first configured, all available calendars from that provider are selected by default
+- Users can manage calendar selections per provider without re-authenticating
 - Users run Windows 10 or later operating systems
 - Users have network connectivity to access cloud calendar services
-- Users want notifications for all calendar events (no event-type filtering needed initially)
+- Users want notifications from their selected calendars across all configured providers (unified notification stream)
 - Default notification lead time of 3 minutes is suitable for most users
-- Events with identical titles are considered part of the same recurring series for "dismiss all future" purposes
-- Users understand that dismissing "all future" applies to event title text matching, not calendar event IDs
+- Events with identical titles are considered part of the same recurring series for "dismiss all future" purposes (applies across all providers)
+- Users understand that dismissing "all future" applies to event title text matching, not calendar event IDs, and affects all providers
 - Application has permission to run on startup (users can configure this via Windows settings)
 - Primary display detection uses Windows API for multi-monitor setups
 - Calendar providers support standard event modification timestamps for detecting changes
@@ -304,6 +399,9 @@ As a user, I want the application to run unobtrusively in the system tray with q
 - Auto-dismissed notifications do not persist as dismissed event titles and will trigger notifications for future occurrences
 - End-to-end tests use mocked/stubbed calendar provider APIs (Microsoft Outlook365 and Google Calendar) rather than hitting real external services, ensuring tests are repeatable, deterministic, and align with Constitutional Principle IV (Functional End-to-End Testing with only third-party dependencies mocked)
 - All testing (unit and E2E) is fully automated with no manual testing required for validation
+- The application supports backward compatibility with single-provider scenarios while enabling power users to aggregate events from multiple sources simultaneously
+- Multiple calendar providers can be active at the same time without interference or requiring deactivation of others
+- Calendar selections (which calendars are included per provider) are independent across providers
 
 ## Open Questions *(optional)*
 

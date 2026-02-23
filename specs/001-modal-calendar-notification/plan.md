@@ -175,12 +175,20 @@ ModalCalendarNotification/
 │   │   │   │   ├── CalendarSyncService.cs        (periodic sync scheduler with Polly resilience)
 │   │   │   │   └── CalendarIntegrationTests.cs   (includes property mapping tests with CompareNetObjects)
 │   │   │   │
+│   │   │   ├── CalendarSelection/                # Vertical Slice: Multi-Calendar Selection per Provider
+│   │   │   │   ├── ICalendarSelectionRepository.cs
+│   │   │   │   ├── CalendarSelectionRepository.cs (SQLite persistence of selected calendars)
+│   │   │   │   ├── CalendarListViewModel.cs       (MVVM ViewModel for calendar checkboxes)
+│   │   │   │   ├── CalendarListDialog.xaml/.cs    (WPF dialog for selecting calendars per provider)
+│   │   │   │   ├── SelectedCalendar.cs            (model for selected calendar state)
+│   │   │   │   └── CalendarSelectionTests.cs      (calendar selection persistence and filtering)
+│   │   │   │
 │   │   │   ├── NotificationManagement/           # Vertical Slice: Notification Scheduling & Delivery
 │   │   │   │   ├── INotificationEngine.cs
-│   │   │   │   ├── NotificationEngine.cs         (core scheduler with pure functions)
+│   │   │   │   ├── NotificationEngine.cs         (core scheduler, filters by selected calendars)
 │   │   │   │   ├── SnoozeScheduler.cs            (snooze timer management)
 │   │   │   │   ├── AutoDismissHandler.cs         (auto-dismiss after timeout)
-│   │   │   │   ├── MissedEventDetector.cs        (24-hour startup lookback)
+│   │   │   │   ├── MissedEventDetector.cs        (24-hour startup lookback, respects calendar selection)
 │   │   │   │   ├── NotificationModalViewModel.cs (MVVM ViewModel)
 │   │   │   │   ├── NotificationModal.xaml/.cs    (WPF modal UI)
 │   │   │   │   └── NotificationManagementTests.cs (includes scheduling logic tests)
@@ -341,16 +349,25 @@ Feature 1: CalendarIntegration
 ├── CalendarSyncService (with Polly resilience)
 └── Tests (unit + property mapping tests)
 
-Feature 2: NotificationManagement
+Feature 2: CalendarSelection
+├── ICalendarSelectionRepository (interface)
+├── CalendarSelectionRepository (SQLite persistence)
+├── SelectedCalendar (model)
+├── CalendarListViewModel (MVVM)
+├── CalendarListDialog (WPF UI)
+└── Tests (selection & filtering)
+
+Feature 3: NotificationManagement
 ├── INotificationEngine (interface)
-├── NotificationEngine (pure functions)
+├── NotificationEngine (filters by selected calendars)
 ├── SnoozeScheduler
 ├── AutoDismissHandler
+├── MissedEventDetector
 ├── NotificationModal (WPF UI)
 ├── NotificationModalViewModel (MVVM)
 └── Tests (scheduling logic)
 
-Feature 3: ConfigurationManagement
+Feature 4: ConfigurationManagement
 ├── IConfigurationService (interface)
 ├── ConfigurationService
 ├── ProviderSelectionDialog (WPF UI)
