@@ -188,12 +188,17 @@ As a user, I want the application to run unobtrusively in the system tray with q
   - Extremely long titles (>500 characters) should be truncated with ellipsis and show full text on hover
   
 - What happens when the user's system time zone changes?
-  - Application should detect time zone changes and recalculate notification times
-  - Events should be displayed in the current local time zone
+  - Application determines the user's local timezone once at startup using TimeZoneInfo.Local
+  - All event times are stored in UTC in the database for consistency
+  - Event times are automatically converted from UTC to local timezone for display
+  - Timezone changes are not detected while the application is running (restart required for new timezone)
+  - Events should be displayed in the timezone that was active when the application started
   
 - How does the system handle snooze when the event start time is reached or passed?
   - If snoozed time extends beyond event start time, notification should still appear
-  - Notification should indicate that the event has already started
+  - Notification should indicate that the event has already started (e.g., "⚠️ Event started 15 minutes ago")
+  - Status message displayed with warning color (orange/red) to draw attention
+  - Elapsed time shown in appropriate units (minutes if <60, hours if <24, "already started" otherwise)
   
 - What happens when the primary display changes (laptop connected to/disconnected from external monitor)?
   - Application should automatically detect display configuration changes using Windows events
@@ -220,6 +225,13 @@ As a user, I want the application to run unobtrusively in the system tray with q
   - System should detect and deduplicate events based on unique event identifier within each provider
   - Events from different providers are treated as separate notifications even if they have the same details
   - Users will receive separate notifications for events from each provider, even if identical
+
+- How are long event titles handled in the UI?
+  - Event titles in notification modals are truncated with ellipsis (...) using TextTrimming="CharacterEllipsis"
+  - Maximum display width is 400 pixels for event titles in modals
+  - Full title is shown in a tooltip when user hovers over truncated text
+  - Dismissed event titles in configuration dialog also use text trimming with tooltips
+  - Provider names and other UI text use text trimming to prevent layout overflow
   
 - What happens when a user removes a calendar provider completely?
   - All calendars from that provider are immediately deselected from the notification stream

@@ -1344,7 +1344,34 @@ public class NotificationEventItem : ObservableObject
     
     // Time when this specific event should auto-dismiss
     public DateTime AutoDismissTime { get; set; }
+    
+    // Indicates if event has already started
+    public bool IsEventAlreadyStarted => Event.StartTime <= DateTime.Now;
+    
+    // Status message for already-started events
+    public string EventStatusMessage
+    {
+        get
+        {
+            if (IsEventAlreadyStarted)
+            {
+                var elapsed = DateTime.Now - Event.StartTime;
+                if (elapsed.TotalMinutes < 60)
+                    return $"⚠️ Event started {elapsed.TotalMinutes:F0} minutes ago";
+                else if (elapsed.TotalHours < 24)
+                    return $"⚠️ Event started {elapsed.TotalHours:F1} hours ago";
+                else
+                    return "⚠️ Event has already started";
+            }
+            return string.Empty;
+        }
+    }
 }
+
+// Converter for BoolToColor (add to App.xaml resources)
+// <BooleanToColorConverter x:Key="BoolToColorConverter" 
+//                          TrueColor="OrangeRed" 
+//                          FalseColor="Black" />
 
 // Feature: NotificationManagement/NotificationEngine.cs
 public class NotificationEngine
@@ -1399,9 +1426,17 @@ public class NotificationEngine
 //       <ItemTemplate>
 //         <Border BorderBrush="Gray" Margin="5">
 //           <StackPanel>
-//             <TextBlock Text="{Binding Event.Title}" FontWeight="Bold" />
-//             <TextBlock Text="{Binding Event.StartTime}" />
-//             <TextBlock Text="{Binding Event.Provider}" FontStyle="Italic" />
+//             <TextBlock Text="{Binding Event.Title}" FontWeight="Bold" 
+//                        TextTrimming="CharacterEllipsis" MaxWidth="400" 
+//                        ToolTip="{Binding Event.Title}" />
+//             <TextBlock Text="{Binding EventStatusMessage}" 
+//                        Foreground="{Binding IsEventAlreadyStarted, Converter={StaticResource BoolToColorConverter}}" 
+//                        FontWeight="Bold" 
+//                        TextTrimming="CharacterEllipsis" />
+//             <TextBlock Text="{Binding Event.StartTime, StringFormat='Start: {0:g}'}" 
+//                        TextTrimming="CharacterEllipsis" />
+//             <TextBlock Text="{Binding Event.Provider}" FontStyle="Italic" 
+//                        TextTrimming="CharacterEllipsis" />
 //             <StackPanel Orientation="Horizontal">
 //               <Button Content="Snooze" Command="{Binding SnoozeCommand}" />
 //               <Button Content="Dismiss" Command="{Binding DismissCommand}" />
@@ -1423,6 +1458,10 @@ public class NotificationEngine
 - Scrollable list handles any number of concurrent events
 - Each event displays provider information (important for multi-account scenarios)
 - Individual action buttons provide granular control over each event
+- **TextTrimming="CharacterEllipsis"** prevents UI overflow with long titles/descriptions
+- **ToolTip** shows full title on hover when truncated
+- **EventStatusMessage** indicates if event has already started with color coding
+- **BoolToColorConverter** shows warning color (red/orange) for already-started events
 
 ### 14. Multiple Accounts Per Provider Pattern
 
@@ -1680,6 +1719,150 @@ public class TokenResponse
 - **Secure Storage**: Refresh tokens encrypted with DPAPI before storage
 - **Provider Abstraction**: Works with any authentication provider (Outlook, Google)
 - **User Notification**: System tray warning if token refresh fails
+
+### 14.6. UTC Time Storage and Timezone Handling Pattern
+
+All event times are stored in UTC and converted to local timezone for display:
+
+```csharp
+// Feature: Shared/TimeZoneService.cs
+public class TimeZoneService
+{
+    private readonly TimeZoneInfo _localTimeZone;
+    
+    public TimeZoneService()
+    {
+        // Determine user's timezone at application startup
+        _localTimeZone = TimeZoneInfo.Local;
+        _logger.LogInformation($"Application timezone: {_localTimeZone.DisplayName}");
+    }
+    
+    public TimeZoneInfo LocalTimeZone => _localTimeZone;
+    
+    // Convert UTC to local time for display
+    public DateTime ToLocalTime(DateTime utcTime)
+    {
+        if (utcTime.Kind != DateTimeKind.Utc)
+        {
+            _logger.LogWarning($"Expected UTC time but received {utcTime.Kind}. Converting to UTC first.");
+            utcTime = DateTime.SpecifyKind(utcTime, DateTimeKind.Utc);
+        }
+        
+        return TimeZoneInfo.ConvertTimeFromUtc(utcTime, _localTimeZone);
+    }
+    
+    // Convert local time to UTC for storage
+    public DateTime ToUtcTime(DateTime localTime)
+    {
+        if (localTime.Kind == DateTimeKind.Utc)
+        {
+            return localTime; // Already UTC
+        }
+        
+        return TimeZoneInfo.ConvertTimeToUtc(localTime, _localTimeZone);
+    }
+    
+    // Format for display with timezone abbreviation
+    public string FormatLocalTime(DateTime utcTime, string format = "g")
+    {
+        var localTime = ToLocalTime(utcTime);
+        var abbreviation = _localTimeZone.IsDaylightSavingTime(localTime)
+            ? _localTimeZone.DaylightName
+            : _localTimeZone.StandardName;
+        
+        return $"{localTime.ToString(format)} {abbreviation}";
+    }
+}
+
+// Feature: CalendarIntegration/CalendarEvent.cs
+public class CalendarEvent
+{
+    public string RemoteId { get; set; }
+    public string Title { get; set; }
+    
+    // Always store in UTC
+    private DateTime _startTimeUtc;
+    public DateTime StartTimeUtc
+    {
+        get => _startTimeUtc;
+        set => _startTimeUtc = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
+    
+    private DateTime _endTimeUtc;
+    public DateTime EndTimeUtc
+    {
+        get => _endTimeUtc;
+        set => _endTimeUtc = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
+    
+    // Convenience properties for display (converted to local)
+    [NotMapped]
+    public DateTime StartTime => _timeZoneService.ToLocalTime(StartTimeUtc);
+    
+    [NotMapped]
+    public DateTime EndTime => _timeZoneService.ToLocalTime(EndTimeUtc);
+    
+    public bool IsAllDay { get; set; }
+    public string Location { get; set; }
+    public string Description { get; set; }
+    public DateTime LastModifiedTimeUtc { get; set; }
+}
+
+// Feature: CalendarIntegration/OutlookEventMapper.cs
+public static class OutlookEventMapper
+{
+    public static CalendarEvent MapFromOutlookEvent(OutlookEventModel outlookEvent, TimeZoneService timeZoneService)
+    {
+        // Parse Outlook time (may be in specific timezone)
+        var startTime = DateTimeOffset.Parse(outlookEvent.Start.DateTime);
+        var endTime = DateTimeOffset.Parse(outlookEvent.End.DateTime);
+        
+        return new CalendarEvent
+        {
+            RemoteId = outlookEvent.Id,
+            Title = outlookEvent.Subject,
+            StartTimeUtc = startTime.UtcDateTime, // Convert to UTC
+            EndTimeUtc = endTime.UtcDateTime, // Convert to UTC
+            IsAllDay = outlookEvent.IsAllDay,
+            Location = outlookEvent.Location?.DisplayName,
+            Description = outlookEvent.BodyPreview,
+            LastModifiedTimeUtc = DateTimeOffset.Parse(outlookEvent.LastModifiedDateTime).UtcDateTime
+        };
+    }
+}
+
+// Feature: NotificationManagement/NotificationEngine.cs
+public class NotificationEngine
+{
+    private readonly TimeZoneService _timeZoneService;
+    
+    private DateTime CalculateNotificationTime(CalendarEvent evt, int leadTimeMinutes)
+    {
+        // All calculations done in UTC
+        var notificationTimeUtc = evt.StartTimeUtc.AddMinutes(-leadTimeMinutes);
+        return notificationTimeUtc;
+    }
+    
+    private bool ShouldShowNotification(CalendarEvent evt, int leadTimeMinutes)
+    {
+        var notificationTimeUtc = CalculateNotificationTime(evt, leadTimeMinutes);
+        var nowUtc = DateTime.UtcNow;
+        
+        // Check if it's time to show notification (in UTC)
+        return nowUtc >= notificationTimeUtc && nowUtc < evt.StartTimeUtc.AddMinutes(5);
+    }
+}
+```
+
+**Rationale**:
+- **UTC Storage**: All times stored in UTC in database for consistency
+- **Timezone at Startup**: User's timezone determined once at application startup (TimeZoneInfo.Local)
+- **No Runtime Detection**: No need to detect timezone changes while running (per requirements)
+- **Automatic Conversion**: Display properties automatically convert UTC to local time
+- **DateTimeKind Enforcement**: Ensures all stored times are explicitly marked as UTC
+- **Calendar API Compatibility**: Handles DateTimeOffset from calendar APIs correctly
+- **Display Formatting**: Includes timezone abbreviation for clarity (e.g., "2:00 PM PST")
+- **Performance**: Single timezone determination at startup, no repeated calls
 
 ### 15. Event Caching and Modification Detection Pattern
 
@@ -2101,7 +2284,8 @@ public class ConfigurationDialogViewModel : ObservableObject
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding}"/>
                                 <Button Grid.Column="1" Content="Restore" Margin="10,0,0,0"
                                         Command="{Binding DataContext.RestoreDismissedTitleCommand, 
                                                  RelativeSource={RelativeSource AncestorType=Window}}"
@@ -2344,6 +2528,10 @@ roslynator_compiler_diagnostic_fixes.enabled = true
 
 **Database Schema**:
 ```sql
+-- NOTE: All DATETIME fields store times in UTC
+-- Times are converted to local timezone when displayed to user
+-- User's timezone is determined at application startup using TimeZoneInfo.Local
+
 -- Configuration
 CREATE TABLE ApplicationConfig (
     Id INTEGER PRIMARY KEY,
@@ -2361,9 +2549,9 @@ CREATE TABLE ProviderCredentials (
     AccountLabel TEXT NOT NULL, -- User-provided label: "Personal Google", "Work Google", etc.
     EncryptedAccessToken TEXT NOT NULL,
     EncryptedRefreshToken TEXT,
-    ExpiresAt DATETIME,
-    LastSyncTime DATETIME,
-    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ExpiresAt DATETIME, -- UTC
+    LastSyncTime DATETIME, -- UTC
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- UTC
     UNIQUE(CalendarProvider, AccountLabel) -- Allow multiple accounts of same calendar provider with different labels
 );
 
@@ -2374,26 +2562,27 @@ CREATE TABLE SelectedCalendars (
     RemoteCalendarId TEXT NOT NULL,
     CalendarName TEXT NOT NULL,
     IsSelected BOOLEAN DEFAULT 1,
-    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- UTC
     FOREIGN KEY(ProviderCredentialsId) REFERENCES ProviderCredentials(Id) ON DELETE CASCADE,
     UNIQUE(ProviderCredentialsId, RemoteCalendarId)
 );
 
 -- Cached calendar events (local cache for offline support, 2 weeks ahead)
+-- All event times stored in UTC for consistency
 CREATE TABLE CachedCalendarEvents (
     Id INTEGER PRIMARY KEY,
     ProviderCredentialsId INTEGER NOT NULL,
     RemoteEventId TEXT NOT NULL,
     CalendarId TEXT NOT NULL,
     Title TEXT NOT NULL,
-    StartTime DATETIME NOT NULL,
-    EndTime DATETIME NOT NULL,
+    StartTime DATETIME NOT NULL, -- UTC
+    EndTime DATETIME NOT NULL, -- UTC
     IsAllDay BOOLEAN DEFAULT 0,
     Location TEXT,
     Description TEXT,
-    LastModifiedTime DATETIME,
+    LastModifiedTime DATETIME, -- UTC
     IsCancelled BOOLEAN DEFAULT 0,
-    CachedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CachedAt DATETIME DEFAULT CURRENT_TIMESTAMP, -- UTC
     FOREIGN KEY(ProviderCredentialsId) REFERENCES ProviderCredentials(Id) ON DELETE CASCADE,
     UNIQUE(ProviderCredentialsId, RemoteEventId)
 );
@@ -2404,6 +2593,16 @@ CREATE INDEX idx_cached_events_provider_calendar ON CachedCalendarEvents(Provide
 -- Dismissed event titles
 CREATE TABLE DismissedEventTitles (
     Id INTEGER PRIMARY KEY,
+    DismissedEventTitle TEXT NOT NULL UNIQUE,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP -- UTC
+);
+
+-- Application state
+CREATE TABLE ApplicationState (
+    Id INTEGER PRIMARY KEY,
+    LastNotificationShownTime DATETIME, -- UTC
+    LastMissedEventCheckTime DATETIME -- UTC
+);
     DismissedEventTitle TEXT NOT NULL UNIQUE,
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
