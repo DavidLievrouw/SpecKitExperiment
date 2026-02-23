@@ -1,0 +1,52 @@
+<Window x:Class="ModalCalendarNotification.UI.Features.ConfigurationManagement.ConfigurationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuration"
+        Width="540"
+        Height="420"
+        WindowStartupLocation="CenterOwner">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TabControl>
+      <TabItem Header="Provider">
+        <StackPanel Margin="12">
+          <TextBlock Text="Selected Provider" FontWeight="SemiBold" />
+          <TextBox Margin="0,8,0,0" Text="{Binding SelectedProvider}" />
+          <Button Margin="0,12,0,0" Width="150" Content="Select Calendars" HorizontalAlignment="Left" Command="{Binding OpenCalendarSelectionCommand}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Notification">
+        <StackPanel Margin="12">
+          <TextBlock Text="Lead Time (minutes)" FontWeight="SemiBold" />
+          <TextBox Margin="0,8,0,12" Text="{Binding NotificationLeadTimeMinutes}" />
+          <TextBlock Text="Auto Dismiss Timeout (seconds)" FontWeight="SemiBold" />
+          <TextBox Margin="0,8,0,0" Text="{Binding AutoDismissTimeoutSeconds}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Dismissed Events">
+        <StackPanel Margin="12">
+          <TextBlock Text="Dismissed recurring event titles can be restored from this tab." TextWrapping="Wrap" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="About">
+        <StackPanel Margin="12">
+          <TextBlock Text="Modal Calendar Notification" FontWeight="SemiBold" FontSize="16" />
+          <TextBlock Margin="0,8,0,0" Text="Version" FontWeight="SemiBold" />
+          <TextBlock Margin="0,4,0,0" Text="{Binding ApplicationVersion}" />
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button Width="90" Margin="0,0,8,0" Content="Load" Command="{Binding LoadCommand}" />
+      <Button Width="90" Content="Save" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

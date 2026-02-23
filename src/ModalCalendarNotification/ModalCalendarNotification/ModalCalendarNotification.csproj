@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModalCalendarNotification.Core\ModalCalendarNotification.Core.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.Data\ModalCalendarNotification.Data.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.CalendarProviders\ModalCalendarNotification.CalendarProviders.csproj" />
+    <ProjectReference Include="..\ModalCalendarNotification.UI\ModalCalendarNotification.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+</Project>

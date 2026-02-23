@@ -1,0 +1,43 @@
+<Window x:Class="ModalCalendarNotification.UI.Features.NotificationManagement.NotificationModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Calendar Notification"
+        Width="480"
+        Height="320"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12" />
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Events}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Margin="0,0,0,8" Padding="8" BorderBrush="LightGray" BorderThickness="1">
+              <StackPanel>
+                <TextBlock Text="{Binding Title}" FontWeight="Bold" />
+                <TextBlock Text="{Binding StartUtc}" FontSize="12" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button Content="Dismiss All Future" Width="140" Margin="0,0,8,0" Command="{Binding DismissAllFutureCommand}" />
+      <Button Content="Snooze" Width="88" Margin="0,0,8,0" Command="{Binding SnoozeCommand}" />
+      <Button Content="Dismiss" Width="88" Command="{Binding DismissCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

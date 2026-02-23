@@ -27,19 +27,19 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 **Tasks**:
 
-- [ ] T001 Create solution file `ModalCalendarNotification.sln` in `src/ModalCalendarNotification/`
-- [ ] T002 Create Directory.Packages.props with centralized NuGet package versions in `src/ModalCalendarNotification/Directory.Packages.props`
-- [ ] T003 Create main project `ModalCalendarNotification.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification/` (WPF .NET 10 application)
-- [ ] T004 Create core library project `ModalCalendarNotification.Core.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.Core/`
-- [ ] T005 Create data library project `ModalCalendarNotification.Data.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.Data/`
-- [ ] T006 Create calendar providers library `ModalCalendarNotification.CalendarProviders.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/`
-- [ ] T007 Create UI library project `ModalCalendarNotification.UI.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.UI/`
-- [ ] T008 Create unit test project `ModalCalendarNotification.Tests.Unit.csproj` in `tests/ModalCalendarNotification.Tests.Unit/`
-- [ ] T009 Create E2E test project `ModalCalendarNotification.Tests.EndToEnd.csproj` in `tests/ModalCalendarNotification.Tests.EndToEnd/`
-- [ ] T010 Configure NuGet packages in Directory.Packages.props: WPF, CommunityToolkit.Mvvm, Microsoft.Data.Sqlite, Microsoft.Identity.Client, Polly, Serilog, xUnit, FakeItEasy, Shouldly, Kellerman.CompareNetObjects
-- [ ] T011 Create .editorconfig with Roslynator analyzers enabled in `src/ModalCalendarNotification/.editorconfig`
-- [ ] T012 Create appsettings.json configuration template in `src/ModalCalendarNotification/ModalCalendarNotification/appsettings.json`
-- [ ] T013 Create README.md with build and run instructions in `src/ModalCalendarNotification/README.md`
+- [X] T001 Create solution file `ModalCalendarNotification.sln` in `src/ModalCalendarNotification/`
+- [X] T002 Create Directory.Packages.props with centralized NuGet package versions in `src/ModalCalendarNotification/Directory.Packages.props`
+- [X] T003 Create main project `ModalCalendarNotification.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification/` (WPF .NET 10 application)
+- [X] T004 Create core library project `ModalCalendarNotification.Core.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.Core/`
+- [X] T005 Create data library project `ModalCalendarNotification.Data.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.Data/`
+- [X] T006 Create calendar providers library `ModalCalendarNotification.CalendarProviders.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/`
+- [X] T007 Create UI library project `ModalCalendarNotification.UI.csproj` in `src/ModalCalendarNotification/ModalCalendarNotification.UI/`
+- [X] T008 Create unit test project `ModalCalendarNotification.Tests.Unit.csproj` in `tests/ModalCalendarNotification.Tests.Unit/`
+- [X] T009 Create E2E test project `ModalCalendarNotification.Tests.EndToEnd.csproj` in `tests/ModalCalendarNotification.Tests.EndToEnd/`
+- [X] T010 Configure NuGet packages in Directory.Packages.props: WPF, CommunityToolkit.Mvvm, Microsoft.Data.Sqlite, Microsoft.Identity.Client, Polly, Serilog, xUnit, FakeItEasy, Shouldly, Kellerman.CompareNetObjects
+- [X] T011 Create .editorconfig with Roslynator analyzers enabled in `src/ModalCalendarNotification/.editorconfig`
+- [X] T012 Create appsettings.json configuration template in `src/ModalCalendarNotification/ModalCalendarNotification/appsettings.json`
+- [X] T013 Create README.md with build and run instructions in `src/ModalCalendarNotification/README.md`
 
 ---
 
@@ -49,27 +49,27 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 **Tasks**:
 
-- [ ] T014 [P] Create CalendarEvent shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/CalendarEvent.cs`
-- [ ] T015 [P] Create Notification shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/Notification.cs`
-- [ ] T016 [P] Create ApplicationConfiguration shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/ApplicationConfiguration.cs`
-- [ ] T017 [P] Create TimeProvider utility for clock abstraction in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/TimeProvider.cs`
-- [ ] T018 [P] Create CryptoHelper utility with Windows DPAPI wrapper in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/CryptoHelper.cs`
-- [ ] T019 [P] Create PollyPolicies utility for resilience policies in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/PollyPolicies.cs`
-- [ ] T020 [P] Create DisplayHelper utility for primary display detection in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/DisplayHelper.cs`
-- [ ] T021 Create AppDbContext for SQLite in `src/ModalCalendarNotification/ModalCalendarNotification.Data/AppDbContext.cs`
-- [ ] T022 Create initial database migration 001_InitialSchema in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/001_InitialSchema.cs`
-- [ ] T023 Create database migration 002_AddAutoDismissConfig in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/002_AddAutoDismissConfig.cs`
-- [ ] T024 Create App.xaml and App.xaml.cs for WPF bootstrap in `src/ModalCalendarNotification/ModalCalendarNotification/App.xaml` and `App.xaml.cs`
-- [ ] T025 Create Program.cs entry point with DI configuration in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
-- [ ] T026 Create ServiceConfiguration.cs for DI container setup in `src/ModalCalendarNotification/ModalCalendarNotification/ServiceConfiguration.cs`
-- [ ] T027 Create ApplicationLifecycleManager for startup/shutdown in `src/ModalCalendarNotification/ModalCalendarNotification/ApplicationLifecycleManager.cs`
+- [X] T014 [P] Create CalendarEvent shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/CalendarEvent.cs`
+- [X] T015 [P] Create Notification shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/Notification.cs`
+- [X] T016 [P] Create ApplicationConfiguration shared model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Models/ApplicationConfiguration.cs`
+- [X] T017 [P] Create TimeProvider utility for clock abstraction in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/TimeProvider.cs`
+- [X] T018 [P] Create CryptoHelper utility with Windows DPAPI wrapper in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/CryptoHelper.cs`
+- [X] T019 [P] Create PollyPolicies utility for resilience policies in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/PollyPolicies.cs`
+- [X] T020 [P] Create DisplayHelper utility for primary display detection in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Shared/Utilities/DisplayHelper.cs`
+- [X] T021 Create AppDbContext for SQLite in `src/ModalCalendarNotification/ModalCalendarNotification.Data/AppDbContext.cs`
+- [X] T022 Create initial database migration 001_InitialSchema in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/001_InitialSchema.cs`
+- [X] T023 Create database migration 002_AddAutoDismissConfig in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/002_AddAutoDismissConfig.cs`
+- [X] T024 Create App.xaml and App.xaml.cs for WPF bootstrap in `src/ModalCalendarNotification/ModalCalendarNotification/App.xaml` and `App.xaml.cs`
+- [X] T025 Create Program.cs entry point with DI configuration in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
+- [X] T026 Create ServiceConfiguration.cs for DI container setup in `src/ModalCalendarNotification/ModalCalendarNotification/ServiceConfiguration.cs`
+- [X] T027 Create ApplicationLifecycleManager for startup/shutdown in `src/ModalCalendarNotification/ModalCalendarNotification/ApplicationLifecycleManager.cs`
 
 **Unit Tests**:
 
-- [ ] T028 [P] Write unit tests for TimeProvider in `tests/ModalCalendarNotification.Tests.Unit/Shared/TimeProviderTests.cs`
-- [ ] T029 [P] Write unit tests for CryptoHelper (DPAPI) in `tests/ModalCalendarNotification.Tests.Unit/Shared/CryptoHelperTests.cs`
-- [ ] T030 [P] Write unit tests for PollyPolicies in `tests/ModalCalendarNotification.Tests.Unit/Shared/PollyPoliciesTests.cs`
-- [ ] T031 [P] Write unit tests for DisplayHelper in `tests/ModalCalendarNotification.Tests.Unit/Shared/DisplayHelperTests.cs`
+- [X] T028 [P] Write unit tests for TimeProvider in `tests/ModalCalendarNotification.Tests.Unit/Shared/TimeProviderTests.cs`
+- [X] T029 [P] Write unit tests for CryptoHelper (DPAPI) in `tests/ModalCalendarNotification.Tests.Unit/Shared/CryptoHelperTests.cs`
+- [X] T030 [P] Write unit tests for PollyPolicies in `tests/ModalCalendarNotification.Tests.Unit/Shared/PollyPoliciesTests.cs`
+- [X] T031 [P] Write unit tests for DisplayHelper in `tests/ModalCalendarNotification.Tests.Unit/Shared/DisplayHelperTests.cs`
 
 ---
 
@@ -83,56 +83,56 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 ### Authentication & Calendar Integration
 
-- [ ] T032 [P] [US1] Create IAuthenticationService interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/IAuthenticationService.cs`
-- [ ] T033 [US1] Implement OAuthService with MSAL wrapper and Polly resilience in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/OAuthService.cs`
-- [ ] T034 [P] [US1] Implement CredentialEncryption with Windows DPAPI in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/CredentialEncryption.cs`
-- [ ] T035 [P] [US1] Implement TokenRefreshOrchestrator with retry logic in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/TokenRefreshOrchestrator.cs`
-- [ ] T036 [P] [US1] Create ICalendarProvider interface in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/ICalendarProvider.cs`
-- [ ] T037 [US1] Implement OutlookCalendarProvider with OAuth 2.0 via MSAL in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/OutlookCalendarProvider.cs`
-- [ ] T038 [US1] Implement GoogleCalendarProvider with OAuth 2.0 via MSAL in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/GoogleCalendarProvider.cs`
-- [ ] T039 [P] [US1] Create OutlookEventMapper for event normalization in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/Mappers/OutlookEventMapper.cs`
-- [ ] T040 [P] [US1] Create GoogleEventMapper for event normalization in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/Mappers/GoogleEventMapper.cs`
-- [ ] T041 [US1] Implement CalendarSyncService with Polly resilience in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarIntegration/CalendarSyncService.cs`
+- [X] T032 [P] [US1] Create IAuthenticationService interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/IAuthenticationService.cs`
+- [X] T033 [US1] Implement OAuthService with MSAL wrapper and Polly resilience in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/OAuthService.cs`
+- [X] T034 [P] [US1] Implement CredentialEncryption with Windows DPAPI in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/CredentialEncryption.cs`
+- [X] T035 [P] [US1] Implement TokenRefreshOrchestrator with retry logic in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/Authentication/TokenRefreshOrchestrator.cs`
+- [X] T036 [P] [US1] Create ICalendarProvider interface in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/ICalendarProvider.cs`
+- [X] T037 [US1] Implement OutlookCalendarProvider with OAuth 2.0 via MSAL in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/OutlookCalendarProvider.cs`
+- [X] T038 [US1] Implement GoogleCalendarProvider with OAuth 2.0 via MSAL in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/GoogleCalendarProvider.cs`
+- [X] T039 [P] [US1] Create OutlookEventMapper for event normalization in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/Mappers/OutlookEventMapper.cs`
+- [X] T040 [P] [US1] Create GoogleEventMapper for event normalization in `src/ModalCalendarNotification/ModalCalendarNotification.CalendarProviders/Mappers/GoogleEventMapper.cs`
+- [X] T041 [US1] Implement CalendarSyncService with Polly resilience in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarIntegration/CalendarSyncService.cs`
 
 ### Notification Engine
 
-- [ ] T042 [P] [US1] Create INotificationEngine interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/INotificationEngine.cs`
-- [ ] T043 [US1] Implement NotificationEngine with lead time calculation and event filtering in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
-- [ ] T044 [P] [US1] Implement SnoozeScheduler for snooze timer management in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/SnoozeScheduler.cs`
-- [ ] T045 [P] [US1] Implement AutoDismissHandler for timeout management in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/AutoDismissHandler.cs`
-- [ ] T046 [P] [US1] Create NotificationEventItem model for multi-event support in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEventItem.cs`
+- [X] T042 [P] [US1] Create INotificationEngine interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/INotificationEngine.cs`
+- [X] T043 [US1] Implement NotificationEngine with lead time calculation and event filtering in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
+- [X] T044 [P] [US1] Implement SnoozeScheduler for snooze timer management in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/SnoozeScheduler.cs`
+- [X] T045 [P] [US1] Implement AutoDismissHandler for timeout management in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/AutoDismissHandler.cs`
+- [X] T046 [P] [US1] Create NotificationEventItem model for multi-event support in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEventItem.cs`
 
 ### Modal UI
 
-- [ ] T047 [P] [US1] Create NotificationModalViewModel with MVVM pattern in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModalViewModel.cs`
-- [ ] T048 [US1] Create NotificationModal.xaml with multi-event scrollable list in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml`
-- [ ] T049 [US1] Implement NotificationModal.xaml.cs code-behind with Topmost=true in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml.cs`
+- [X] T047 [P] [US1] Create NotificationModalViewModel with MVVM pattern in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModalViewModel.cs`
+- [X] T048 [US1] Create NotificationModal.xaml with multi-event scrollable list in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml`
+- [X] T049 [US1] Implement NotificationModal.xaml.cs code-behind with Topmost=true in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml.cs`
 
 ### Unit Tests
 
-- [ ] T050 [P] [US1] Write unit tests for OAuthService with mocked MSAL in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/OAuthServiceTests.cs`
-- [ ] T051 [P] [US1] Write unit tests for TokenRefreshOrchestrator in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/TokenRefreshOrchestratorTests.cs`
-- [ ] T052 [P] [US1] Write unit tests for CredentialEncryption in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/CredentialEncryptionTests.cs`
-- [ ] T053 [P] [US1] Write unit tests for OutlookCalendarProvider with mocked OAuth in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/OutlookCalendarProviderTests.cs`
-- [ ] T054 [P] [US1] Write unit tests for GoogleCalendarProvider with mocked OAuth in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/GoogleCalendarProviderTests.cs`
-- [ ] T055 [P] [US1] Write property mapping tests for OutlookEventMapper using CompareNetObjects in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/OutlookEventMapperTests.cs`
-- [ ] T056 [P] [US1] Write property mapping tests for GoogleEventMapper using CompareNetObjects in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/GoogleEventMapperTests.cs`
-- [ ] T057 [P] [US1] Write unit tests for CalendarSyncService with Polly policies in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/CalendarSyncServiceTests.cs`
-- [ ] T058 [P] [US1] Write unit tests for NotificationEngine (lead time, filtering, grouping) in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/NotificationEngineTests.cs`
-- [ ] T059 [P] [US1] Write unit tests for SnoozeScheduler in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/SnoozeSchedulerTests.cs`
-- [ ] T060 [P] [US1] Write unit tests for AutoDismissHandler in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/AutoDismissHandlerTests.cs`
+- [X] T050 [P] [US1] Write unit tests for OAuthService with mocked MSAL in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/OAuthServiceTests.cs`
+- [X] T051 [P] [US1] Write unit tests for TokenRefreshOrchestrator in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/TokenRefreshOrchestratorTests.cs`
+- [X] T052 [P] [US1] Write unit tests for CredentialEncryption in `tests/ModalCalendarNotification.Tests.Unit/Features/Authentication/CredentialEncryptionTests.cs`
+- [X] T053 [P] [US1] Write unit tests for OutlookCalendarProvider with mocked OAuth in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/OutlookCalendarProviderTests.cs`
+- [X] T054 [P] [US1] Write unit tests for GoogleCalendarProvider with mocked OAuth in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/GoogleCalendarProviderTests.cs`
+- [X] T055 [P] [US1] Write property mapping tests for OutlookEventMapper using CompareNetObjects in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/OutlookEventMapperTests.cs`
+- [X] T056 [P] [US1] Write property mapping tests for GoogleEventMapper using CompareNetObjects in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/GoogleEventMapperTests.cs`
+- [X] T057 [P] [US1] Write unit tests for CalendarSyncService with Polly policies in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarIntegration/CalendarSyncServiceTests.cs`
+- [X] T058 [P] [US1] Write unit tests for NotificationEngine (lead time, filtering, grouping) in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/NotificationEngineTests.cs`
+- [X] T059 [P] [US1] Write unit tests for SnoozeScheduler in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/SnoozeSchedulerTests.cs`
+- [X] T060 [P] [US1] Write unit tests for AutoDismissHandler in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/AutoDismissHandlerTests.cs`
 
 ### E2E Tests
 
-- [ ] T061 [P] [US1] Create test harness infrastructure in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/TestApplicationHost.cs`
-- [ ] T062 [P] [US1] Create MockCalendarEventGenerator in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/MockCalendarEventGenerator.cs`
-- [ ] T063 [P] [US1] Create ModalWindowSimulator in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/ModalWindowSimulator.cs`
-- [ ] T064 [P] [US1] Create TimeController for time mocking in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/TimeController.cs`
-- [ ] T065 [P] [US1] Create OutlookCalendarMock in `tests/ModalCalendarNotification.Tests.EndToEnd/Fixtures/OutlookCalendarMock.cs`
-- [ ] T066 [P] [US1] Create GoogleCalendarMock in `tests/ModalCalendarNotification.Tests.EndToEnd/Fixtures/GoogleCalendarMock.cs`
-- [ ] T067 [US1] Write E2E test: ReceiveNotificationWorkflow (add credentials → notification) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/ReceiveNotificationWorkflowTests.cs`
-- [ ] T068 [US1] Write E2E test: SnoozeWorkflow (snooze → re-notification timing) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/SnoozeWorkflowTests.cs`
-- [ ] T069 [US1] Write E2E test: AutoDismissWorkflow (untouched modal timeout) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/AutoDismissWorkflowTests.cs`
+- [X] T061 [P] [US1] Create test harness infrastructure in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/TestApplicationHost.cs`
+- [X] T062 [P] [US1] Create MockCalendarEventGenerator in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/MockCalendarEventGenerator.cs`
+- [X] T063 [P] [US1] Create ModalWindowSimulator in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/ModalWindowSimulator.cs`
+- [X] T064 [P] [US1] Create TimeController for time mocking in `tests/ModalCalendarNotification.Tests.EndToEnd/TestHarness/TimeController.cs`
+- [X] T065 [P] [US1] Create OutlookCalendarMock in `tests/ModalCalendarNotification.Tests.EndToEnd/Fixtures/OutlookCalendarMock.cs`
+- [X] T066 [P] [US1] Create GoogleCalendarMock in `tests/ModalCalendarNotification.Tests.EndToEnd/Fixtures/GoogleCalendarMock.cs`
+- [X] T067 [US1] Write E2E test: ReceiveNotificationWorkflow (add credentials → notification) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/ReceiveNotificationWorkflowTests.cs`
+- [X] T068 [US1] Write E2E test: SnoozeWorkflow (snooze → re-notification timing) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/SnoozeWorkflowTests.cs`
+- [X] T069 [US1] Write E2E test: AutoDismissWorkflow (untouched modal timeout) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/AutoDismissWorkflowTests.cs`
 
 ---
 
@@ -147,21 +147,21 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 ### Dismissed Events Management
 
-- [ ] T070 [P] [US2] Create IDismissedEventTitleRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/DismissedEventsManagement/IDismissedEventTitleRepository.cs`
-- [ ] T071 [US2] Implement DismissedEventTitleRepository with SQLite and case-insensitive matching in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/DismissedEventsManagement/DismissedEventTitleRepository.cs`
-- [ ] T072 [P] [US2] Create DismissedEventTitle model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/DismissedEventsManagement/DismissedEventTitle.cs`
-- [ ] T073 [US2] Update NotificationEngine to filter dismissed event titles in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
-- [ ] T074 [US2] Add "Dismiss All Future" button to NotificationModal.xaml in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml`
-- [ ] T075 [US2] Implement DismissAllFuture command in NotificationModalViewModel in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModalViewModel.cs`
+- [X] T070 [P] [US2] Create IDismissedEventTitleRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/DismissedEventsManagement/IDismissedEventTitleRepository.cs`
+- [X] T071 [US2] Implement DismissedEventTitleRepository with SQLite and case-insensitive matching in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/DismissedEventsManagement/DismissedEventTitleRepository.cs`
+- [X] T072 [P] [US2] Create DismissedEventTitle model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/DismissedEventsManagement/DismissedEventTitle.cs`
+- [X] T073 [US2] Update NotificationEngine to filter dismissed event titles in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
+- [X] T074 [US2] Add "Dismiss All Future" button to NotificationModal.xaml in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModal.xaml`
+- [X] T075 [US2] Implement DismissAllFuture command in NotificationModalViewModel in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/NotificationModalViewModel.cs`
 
 ### Unit Tests
 
-- [ ] T076 [P] [US2] Write unit tests for DismissedEventTitleRepository (CRUD, case-insensitive) in `tests/ModalCalendarNotification.Tests.Unit/Features/DismissedEventsManagement/DismissedEventTitleRepositoryTests.cs`
-- [ ] T077 [P] [US2] Write unit tests for NotificationEngine dismissed title filtering in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/NotificationEngineTests.cs` (extend existing)
+- [X] T076 [P] [US2] Write unit tests for DismissedEventTitleRepository (CRUD, case-insensitive) in `tests/ModalCalendarNotification.Tests.Unit/Features/DismissedEventsManagement/DismissedEventTitleRepositoryTests.cs`
+- [X] T077 [P] [US2] Write unit tests for NotificationEngine dismissed title filtering in `tests/ModalCalendarNotification.Tests.Unit/Features/NotificationManagement/NotificationEngineTests.cs` (extend existing)
 
 ### E2E Tests
 
-- [ ] T078 [US2] Write E2E test: DismissAllFutureWorkflow (title filtering) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/DismissAllFutureWorkflowTests.cs`
+- [X] T078 [US2] Write E2E test: DismissAllFutureWorkflow (title filtering) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/DismissAllFutureWorkflowTests.cs`
 
 ---
 
@@ -176,30 +176,30 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 ### System Tray Integration
 
-- [ ] T079 [P] [US3] Create SystemTrayViewModel with MVVM pattern in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/SystemTrayManagement/SystemTrayViewModel.cs`
-- [ ] T080 [US3] Implement SystemTrayIcon with context menu in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/SystemTrayManagement/SystemTrayIcon.cs`
+- [X] T079 [P] [US3] Create SystemTrayViewModel with MVVM pattern in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/SystemTrayManagement/SystemTrayViewModel.cs`
+- [X] T080 [US3] Implement SystemTrayIcon with context menu in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/SystemTrayManagement/SystemTrayIcon.cs`
 
 ### Configuration Management
 
-- [ ] T081 [P] [US3] Create IConfigurationService interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/IConfigurationService.cs`
-- [ ] T082 [US3] Implement ConfigurationService with settings persistence in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/ConfigurationService.cs`
-- [ ] T083 [P] [US3] Create ProviderAccountItem model for multi-account display in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/ProviderAccountItem.cs`
-- [ ] T084 [P] [US3] Create ProviderSelectionViewModel with account label input in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionViewModel.cs`
-- [ ] T085 [US3] Create ProviderSelectionDialog.xaml with provider list UI in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionDialog.xaml`
-- [ ] T086 [US3] Implement ProviderSelectionDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionDialog.xaml.cs`
-- [ ] T087 [P] [US3] Create ConfigurationDialogViewModel with auto-dismiss timeout in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialogViewModel.cs`
-- [ ] T088 [US3] Create ConfigurationDialog.xaml with tabbed settings UI in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
-- [ ] T089 [US3] Implement ConfigurationDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml.cs`
-- [ ] T090 [US3] Add Dismissed Events tab to ConfigurationDialog with restore functionality in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
+- [X] T081 [P] [US3] Create IConfigurationService interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/IConfigurationService.cs`
+- [X] T082 [US3] Implement ConfigurationService with settings persistence in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/ConfigurationService.cs`
+- [X] T083 [P] [US3] Create ProviderAccountItem model for multi-account display in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/ConfigurationManagement/ProviderAccountItem.cs`
+- [X] T084 [P] [US3] Create ProviderSelectionViewModel with account label input in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionViewModel.cs`
+- [X] T085 [US3] Create ProviderSelectionDialog.xaml with provider list UI in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionDialog.xaml`
+- [X] T086 [US3] Implement ProviderSelectionDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ProviderSelectionDialog.xaml.cs`
+- [X] T087 [P] [US3] Create ConfigurationDialogViewModel with auto-dismiss timeout in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialogViewModel.cs`
+- [X] T088 [US3] Create ConfigurationDialog.xaml with tabbed settings UI in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
+- [X] T089 [US3] Implement ConfigurationDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml.cs`
+- [X] T090 [US3] Add Dismissed Events tab to ConfigurationDialog with restore functionality in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
 
 ### Unit Tests
 
-- [ ] T091 [P] [US3] Write unit tests for SystemTrayViewModel in `tests/ModalCalendarNotification.Tests.Unit/Features/SystemTrayManagement/SystemTrayViewModelTests.cs`
-- [ ] T092 [P] [US3] Write unit tests for ConfigurationService in `tests/ModalCalendarNotification.Tests.Unit/Features/ConfigurationManagement/ConfigurationServiceTests.cs`
+- [X] T091 [P] [US3] Write unit tests for SystemTrayViewModel in `tests/ModalCalendarNotification.Tests.Unit/Features/SystemTrayManagement/SystemTrayViewModelTests.cs`
+- [X] T092 [P] [US3] Write unit tests for ConfigurationService in `tests/ModalCalendarNotification.Tests.Unit/Features/ConfigurationManagement/ConfigurationServiceTests.cs`
 
 ### E2E Tests
 
-- [ ] T093 [US3] Write E2E test: ConfigurationPersistenceWorkflow (settings survive restart) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/ConfigurationPersistenceWorkflowTests.cs`
+- [X] T093 [US3] Write E2E test: ConfigurationPersistenceWorkflow (settings survive restart) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/ConfigurationPersistenceWorkflowTests.cs`
 
 ---
 
@@ -214,35 +214,35 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 ### Calendar Selection Management
 
-- [ ] T094 [P] [US5] Create ICalendarSelectionRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarSelection/ICalendarSelectionRepository.cs`
-- [ ] T095 [US5] Implement CalendarSelectionRepository with SQLite in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/CalendarSelection/CalendarSelectionRepository.cs`
-- [ ] T096 [P] [US5] Create SelectedCalendar model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarSelection/SelectedCalendar.cs`
-- [ ] T097 [P] [US5] Create CalendarListViewModel with checkbox selection in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListViewModel.cs`
-- [ ] T098 [US5] Create CalendarListDialog.xaml with calendar checkboxes in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListDialog.xaml`
-- [ ] T099 [US5] Implement CalendarListDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListDialog.xaml.cs`
-- [ ] T100 [US5] Update NotificationEngine to respect calendar selections in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
-- [ ] T101 [US5] Update ConfigurationDialog to integrate calendar selection workflow in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
+- [X] T094 [P] [US5] Create ICalendarSelectionRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarSelection/ICalendarSelectionRepository.cs`
+- [X] T095 [US5] Implement CalendarSelectionRepository with SQLite in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/CalendarSelection/CalendarSelectionRepository.cs`
+- [X] T096 [P] [US5] Create SelectedCalendar model in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarSelection/SelectedCalendar.cs`
+- [X] T097 [P] [US5] Create CalendarListViewModel with checkbox selection in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListViewModel.cs`
+- [X] T098 [US5] Create CalendarListDialog.xaml with calendar checkboxes in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListDialog.xaml`
+- [X] T099 [US5] Implement CalendarListDialog.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/CalendarSelection/CalendarListDialog.xaml.cs`
+- [X] T100 [US5] Update NotificationEngine to respect calendar selections in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
+- [X] T101 [US5] Update ConfigurationDialog to integrate calendar selection workflow in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
 
 ### Startup Recovery (Missed Events)
 
-- [ ] T102 [P] [US5] Create IApplicationStateRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/IApplicationStateRepository.cs`
-- [ ] T103 [US5] Implement ApplicationStateRepository with timestamp persistence in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/StartupRecovery/ApplicationStateRepository.cs`
-- [ ] T104 [P] [US5] Implement MissedEventDetector with 24-hour lookback in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/MissedEventDetector.cs`
-- [ ] T105 [US5] Implement MissedEventRecoveryService orchestrator in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/MissedEventRecoveryService.cs`
-- [ ] T106 [P] [US5] Create StartupMissedEventsViewModel in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsViewModel.cs`
-- [ ] T107 [US5] Create StartupMissedEventsModal.xaml in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsModal.xaml`
-- [ ] T108 [US5] Implement StartupMissedEventsModal.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsModal.xaml.cs`
+- [X] T102 [P] [US5] Create IApplicationStateRepository interface in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/IApplicationStateRepository.cs`
+- [X] T103 [US5] Implement ApplicationStateRepository with timestamp persistence in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Features/StartupRecovery/ApplicationStateRepository.cs`
+- [X] T104 [P] [US5] Implement MissedEventDetector with 24-hour lookback in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/MissedEventDetector.cs`
+- [X] T105 [US5] Implement MissedEventRecoveryService orchestrator in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/StartupRecovery/MissedEventRecoveryService.cs`
+- [X] T106 [P] [US5] Create StartupMissedEventsViewModel in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsViewModel.cs`
+- [X] T107 [US5] Create StartupMissedEventsModal.xaml in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsModal.xaml`
+- [X] T108 [US5] Implement StartupMissedEventsModal.xaml.cs code-behind in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/StartupRecovery/StartupMissedEventsModal.xaml.cs`
 
 ### Unit Tests
 
-- [ ] T109 [P] [US5] Write unit tests for CalendarSelectionRepository in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarSelection/CalendarSelectionRepositoryTests.cs`
-- [ ] T110 [P] [US5] Write unit tests for ApplicationStateRepository in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/ApplicationStateRepositoryTests.cs`
-- [ ] T111 [P] [US5] Write unit tests for MissedEventDetector (24-hour window) in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/MissedEventDetectorTests.cs`
-- [ ] T112 [P] [US5] Write unit tests for MissedEventRecoveryService in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/MissedEventRecoveryServiceTests.cs`
+- [X] T109 [P] [US5] Write unit tests for CalendarSelectionRepository in `tests/ModalCalendarNotification.Tests.Unit/Features/CalendarSelection/CalendarSelectionRepositoryTests.cs`
+- [X] T110 [P] [US5] Write unit tests for ApplicationStateRepository in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/ApplicationStateRepositoryTests.cs`
+- [X] T111 [P] [US5] Write unit tests for MissedEventDetector (24-hour window) in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/MissedEventDetectorTests.cs`
+- [X] T112 [P] [US5] Write unit tests for MissedEventRecoveryService in `tests/ModalCalendarNotification.Tests.Unit/Features/StartupRecovery/MissedEventRecoveryServiceTests.cs`
 
 ### E2E Tests
 
-- [ ] T113 [US5] Write E2E test: MissedEventDetectionWorkflow (startup detection) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/MissedEventDetectionWorkflowTests.cs`
+- [X] T113 [US5] Write E2E test: MissedEventDetectionWorkflow (startup detection) in `tests/ModalCalendarNotification.Tests.EndToEnd/Workflows/MissedEventDetectionWorkflowTests.cs`
 
 ---
 
@@ -252,18 +252,18 @@ This document provides a dependency-ordered, independently testable task breakdo
 
 **Tasks**:
 
-- [ ] T114 [P] Configure Serilog structured logging in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
-- [ ] T115 [P] Implement multi-monitor display change handling in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/DisplayMonitor.cs`
-- [ ] T116 [P] Add error handling and graceful degradation to CalendarSyncService in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarIntegration/CalendarSyncService.cs`
-- [ ] T117 [P] Add performance logging for notification latency in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
-- [ ] T118 [P] Implement database indexes for performance in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/003_AddPerformanceIndexes.cs`
-- [ ] T119 Create FakeCalendarProvider for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeCalendarProvider.cs`
-- [ ] T120 Create FakeDismissedEventTitleRepository for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeDismissedEventTitleRepository.cs`
-- [ ] T121 Create FakeTimeProvider for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeTimeProvider.cs`
-- [ ] T122 Add application icon and system tray icon resources in `src/ModalCalendarNotification/ModalCalendarNotification/Resources/`
-- [ ] T123 Implement single-instance enforcement (prevent multiple app instances) in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
-- [ ] T124 Add version information display in ConfigurationDialog About tab in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
-- [ ] T125 Final E2E test run and validation across all workflows
+- [X] T114 [P] Configure Serilog structured logging in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
+- [X] T115 [P] Implement multi-monitor display change handling in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/NotificationManagement/DisplayMonitor.cs`
+- [X] T116 [P] Add error handling and graceful degradation to CalendarSyncService in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/CalendarIntegration/CalendarSyncService.cs`
+- [X] T117 [P] Add performance logging for notification latency in `src/ModalCalendarNotification/ModalCalendarNotification.Core/Features/NotificationManagement/NotificationEngine.cs`
+- [X] T118 [P] Implement database indexes for performance in `src/ModalCalendarNotification/ModalCalendarNotification.Data/Migrations/003_AddPerformanceIndexes.cs`
+- [X] T119 Create FakeCalendarProvider for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeCalendarProvider.cs`
+- [X] T120 Create FakeDismissedEventTitleRepository for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeDismissedEventTitleRepository.cs`
+- [X] T121 Create FakeTimeProvider for testing in `tests/ModalCalendarNotification.Tests.Unit/Fakes/FakeTimeProvider.cs`
+- [X] T122 Add application icon and system tray icon resources in `src/ModalCalendarNotification/ModalCalendarNotification/Resources/`
+- [X] T123 Implement single-instance enforcement (prevent multiple app instances) in `src/ModalCalendarNotification/ModalCalendarNotification/Program.cs`
+- [X] T124 Add version information display in ConfigurationDialog About tab in `src/ModalCalendarNotification/ModalCalendarNotification.UI/Features/ConfigurationManagement/ConfigurationDialog.xaml`
+- [X] T125 Final E2E test run and validation across all workflows
 
 ---
 
