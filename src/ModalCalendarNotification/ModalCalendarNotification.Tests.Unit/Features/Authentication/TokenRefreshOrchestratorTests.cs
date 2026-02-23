@@ -12,7 +12,7 @@ public sealed class TokenRefreshOrchestratorTests
         var authService = new StubAuthenticationService("refreshed-token");
         var sut = new TokenRefreshOrchestrator(authService);
 
-        var token = await sut.RefreshTokenAsync("GoogleCalendar", ["scope"]);
+        string token = await sut.RefreshTokenAsync("GoogleCalendar", ["scope"]);
 
         token.ShouldBe("refreshed-token");
     }
@@ -26,7 +26,11 @@ public sealed class TokenRefreshOrchestratorTests
             _token = token;
         }
 
-        public Task<string> AcquireAccessTokenAsync(string provider, IReadOnlyList<string> scopes, CancellationToken cancellationToken = default)
+        public Task<string> AcquireAccessTokenAsync(
+            string provider,
+            IReadOnlyList<string> scopes,
+            CancellationToken cancellationToken = default
+        )
         {
             return Task.FromResult(_token);
         }

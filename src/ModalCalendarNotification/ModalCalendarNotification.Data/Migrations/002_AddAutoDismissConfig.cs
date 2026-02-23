@@ -6,6 +6,6 @@ public static class _002_AddAutoDismissConfig
 
     public static IReadOnlyList<string> SqlStatements { get; } =
     [
-        "INSERT OR IGNORE INTO Configuration (Key, Value) VALUES ('Notification.AutoDismissTimeoutSeconds', '60');"
+        "INSERT OR IGNORE INTO Configuration (Key, Value) VALUES ('Notification.AutoDismissTimeoutSeconds', '60');",
     ];
 }

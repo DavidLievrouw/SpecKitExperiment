@@ -1,10 +1,12 @@
-<Window x:Class="ModalCalendarNotification.UI.Features.CalendarSelection.CalendarListDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Calendar Selection"
-        Width="500"
-        Height="360"
-        WindowStartupLocation="CenterOwner">
+<Window
+  x:Class="ModalCalendarNotification.UI.Features.CalendarSelection.CalendarListDialog"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Calendar Selection"
+  Width="500"
+  Height="360"
+  WindowStartupLocation="CenterOwner"
+>
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -17,12 +19,23 @@
           <GridViewColumn Header="Selected" Width="80">
             <GridViewColumn.CellTemplate>
               <DataTemplate>
-                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" HorizontalAlignment="Center" />
+                <CheckBox
+                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                  HorizontalAlignment="Center"
+                />
               </DataTemplate>
             </GridViewColumn.CellTemplate>
           </GridViewColumn>
-          <GridViewColumn Header="Provider" DisplayMemberBinding="{Binding ProviderName}" Width="140" />
-          <GridViewColumn Header="Calendar" DisplayMemberBinding="{Binding DisplayName}" Width="220" />
+          <GridViewColumn
+            Header="Provider"
+            DisplayMemberBinding="{Binding ProviderName}"
+            Width="140"
+          />
+          <GridViewColumn
+            Header="Calendar"
+            DisplayMemberBinding="{Binding DisplayName}"
+            Width="220"
+          />
         </GridView>
       </ListView.View>
     </ListView>

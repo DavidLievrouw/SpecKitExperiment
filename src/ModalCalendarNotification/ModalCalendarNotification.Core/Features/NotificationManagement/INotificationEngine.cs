@@ -7,5 +7,6 @@ public interface INotificationEngine
     IReadOnlyList<Notification> BuildNotifications(
         IReadOnlyList<CalendarEvent> events,
         DateTimeOffset nowUtc,
-        int leadTimeMinutes);
+        int leadTimeMinutes
+    );
 }

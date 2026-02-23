@@ -6,10 +6,10 @@ namespace ModalCalendarNotification.UI.Features.SystemTrayManagement;
 public partial class SystemTrayViewModel : ObservableObject
 {
     [ObservableProperty]
-    private bool _isSettingsRequested;
+    private bool _isExitRequested;
 
     [ObservableProperty]
-    private bool _isExitRequested;
+    private bool _isSettingsRequested;
 
     [RelayCommand]
     private void OpenSettings()

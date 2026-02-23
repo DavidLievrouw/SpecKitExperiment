@@ -6,14 +6,15 @@ public static class PollyPolicies
         Func<CancellationToken, Task> operation,
         int maxRetryAttempts = 3,
         TimeSpan? retryDelay = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        var delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
+        TimeSpan delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
         Exception? lastException = null;
 
-        for (var attempt = 1; attempt <= maxRetryAttempts; attempt++)
+        for (int attempt = 1; attempt <= maxRetryAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -45,14 +46,15 @@ public static class PollyPolicies
         Func<CancellationToken, Task<T>> operation,
         int maxRetryAttempts = 3,
         TimeSpan? retryDelay = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        var delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
+        TimeSpan delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
         Exception? lastException = null;
 
-        for (var attempt = 1; attempt <= maxRetryAttempts; attempt++)
+        for (int attempt = 1; attempt <= maxRetryAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -82,7 +84,8 @@ public static class PollyPolicies
     public static async Task<T> ExecuteWithTimeoutAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         TimeSpan timeout,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(operation);
 

@@ -11,20 +11,29 @@ public sealed class OAuthService : IAuthenticationService
         _tokenClient = tokenClient;
     }
 
-    public Task<string> AcquireAccessTokenAsync(string provider, IReadOnlyList<string> scopes, CancellationToken cancellationToken = default)
+    public Task<string> AcquireAccessTokenAsync(
+        string provider,
+        IReadOnlyList<string> scopes,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(provider);
         ArgumentNullException.ThrowIfNull(scopes);
 
         return PollyPolicies.ExecuteWithRetryAsync(
             async token => await _tokenClient.AcquireTokenAsync(provider, scopes, token),
-            maxRetryAttempts: 3,
-            retryDelay: TimeSpan.FromMilliseconds(50),
-            cancellationToken: cancellationToken);
+            3,
+            TimeSpan.FromMilliseconds(50),
+            cancellationToken
+        );
     }
 }
 
 public interface IMsalTokenClient
 {
-    Task<string> AcquireTokenAsync(string provider, IReadOnlyList<string> scopes, CancellationToken cancellationToken);
+    Task<string> AcquireTokenAsync(
+        string provider,
+        IReadOnlyList<string> scopes,
+        CancellationToken cancellationToken
+    );
 }

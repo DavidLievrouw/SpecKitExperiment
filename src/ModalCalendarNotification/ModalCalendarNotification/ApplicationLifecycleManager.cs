@@ -8,12 +8,26 @@ public sealed class ApplicationLifecycleManager : IDisposable
     private readonly SystemTrayManager _systemTrayManager;
     private bool _disposed;
 
-    public bool IsRunning { get; private set; }
-
     public ApplicationLifecycleManager(SystemTrayManager systemTrayManager)
     {
         _systemTrayManager =
             systemTrayManager ?? throw new ArgumentNullException(nameof(systemTrayManager));
+    }
+
+    public bool IsRunning { get; private set; }
+
+    public void Dispose()
+    {
+        lock (_sync)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _systemTrayManager?.Dispose();
+            _disposed = true;
+        }
     }
 
     public void Start()
@@ -21,7 +35,9 @@ public sealed class ApplicationLifecycleManager : IDisposable
         lock (_sync)
         {
             if (_disposed)
+            {
                 throw new ObjectDisposedException(nameof(ApplicationLifecycleManager));
+            }
 
             IsRunning = true;
             _systemTrayManager.Initialize();
@@ -33,18 +49,6 @@ public sealed class ApplicationLifecycleManager : IDisposable
         lock (_sync)
         {
             IsRunning = false;
-        }
-    }
-
-    public void Dispose()
-    {
-        lock (_sync)
-        {
-            if (_disposed)
-                return;
-
-            _systemTrayManager?.Dispose();
-            _disposed = true;
         }
     }
 }

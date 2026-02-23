@@ -1,11 +1,13 @@
-<Window x:Class="ModalCalendarNotification.UI.Features.ConfigurationManagement.ProviderSelectionDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Select Provider"
-        Width="360"
-        Height="220"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+<Window
+  x:Class="ModalCalendarNotification.UI.Features.ConfigurationManagement.ProviderSelectionDialog"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Select Provider"
+  Width="360"
+  Height="220"
+  WindowStartupLocation="CenterOwner"
+  ResizeMode="NoResize"
+>
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -16,11 +18,26 @@
     </Grid.RowDefinitions>
 
     <TextBlock Text="Provider" FontWeight="SemiBold" />
-    <ComboBox Grid.Row="1" Margin="0,8,0,12" ItemsSource="{Binding AvailableProviders}" SelectedItem="{Binding SelectedProvider}" />
+    <ComboBox
+      Grid.Row="1"
+      Margin="0,8,0,12"
+      ItemsSource="{Binding AvailableProviders}"
+      SelectedItem="{Binding SelectedProvider}"
+    />
 
     <TextBlock Grid.Row="2" Text="Account Label" FontWeight="SemiBold" />
-    <TextBox Grid.Row="3" Margin="0,8,0,12" Text="{Binding AccountLabel, UpdateSourceTrigger=PropertyChanged}" />
+    <TextBox
+      Grid.Row="3"
+      Margin="0,8,0,12"
+      Text="{Binding AccountLabel, UpdateSourceTrigger=PropertyChanged}"
+    />
 
-    <Button Grid.Row="4" HorizontalAlignment="Right" Width="90" Content="Save" Command="{Binding ConfirmCommand}" />
+    <Button
+      Grid.Row="4"
+      HorizontalAlignment="Right"
+      Width="90"
+      Content="Save"
+      Command="{Binding ConfirmCommand}"
+    />
   </Grid>
 </Window>

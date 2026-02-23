@@ -9,7 +9,8 @@ public sealed class MissedEventRecoveryService
 
     public MissedEventRecoveryService(
         IApplicationStateRepository applicationStateRepository,
-        MissedEventDetector missedEventDetector)
+        MissedEventDetector missedEventDetector
+    )
     {
         _applicationStateRepository = applicationStateRepository;
         _missedEventDetector = missedEventDetector;
@@ -18,10 +19,17 @@ public sealed class MissedEventRecoveryService
     public async Task<IReadOnlyList<CalendarEvent>> RecoverMissedEventsAsync(
         IReadOnlyList<CalendarEvent> latestEvents,
         DateTimeOffset nowUtc,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var lastRun = await _applicationStateRepository.GetLastRunUtcAsync(cancellationToken);
-        var missed = _missedEventDetector.DetectMissedEvents(latestEvents, lastRun, nowUtc);
+        DateTimeOffset? lastRun = await _applicationStateRepository.GetLastRunUtcAsync(
+            cancellationToken
+        );
+        IReadOnlyList<CalendarEvent> missed = _missedEventDetector.DetectMissedEvents(
+            latestEvents,
+            lastRun,
+            nowUtc
+        );
 
         await _applicationStateRepository.SetLastRunUtcAsync(nowUtc, cancellationToken);
         return missed;

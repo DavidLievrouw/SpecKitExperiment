@@ -6,7 +6,7 @@ public static class MockCalendarEventGenerator
 {
     public static CalendarEvent CreateUpcoming(string id, string title, int minutesFromNow)
     {
-        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
         return new CalendarEvent
         {
             Id = id,
@@ -14,7 +14,7 @@ public static class MockCalendarEventGenerator
             StartUtc = now.AddMinutes(minutesFromNow),
             EndUtc = now.AddMinutes(minutesFromNow + 30),
             Provider = "Test",
-            CalendarId = "TestCalendar"
+            CalendarId = "TestCalendar",
         };
     }
 }

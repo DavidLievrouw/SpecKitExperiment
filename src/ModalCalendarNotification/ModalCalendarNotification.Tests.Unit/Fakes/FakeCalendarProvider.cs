@@ -15,9 +15,13 @@ public sealed class FakeCalendarProvider : ICalendarProvider
 
     public string ProviderName { get; }
 
-    public Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken = default
+    )
     {
-        var filtered = _events
+        List<CalendarEvent> filtered = _events
             .Where(x => x.StartUtc >= fromUtc && x.StartUtc <= toUtc)
             .ToList();
 

@@ -16,7 +16,7 @@ public static class GoogleEventMapper
             Location = source.Location,
             Provider = "GoogleCalendar",
             CalendarId = source.CalendarId,
-            IsAllDay = source.IsAllDay
+            IsAllDay = source.IsAllDay,
         };
     }
 }
@@ -29,4 +29,5 @@ public sealed record GoogleEventModel(
     DateTimeOffset EndUtc,
     string? Location,
     string CalendarId,
-    bool IsAllDay);
+    bool IsAllDay
+);

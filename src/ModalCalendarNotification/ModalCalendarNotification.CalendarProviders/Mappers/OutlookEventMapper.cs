@@ -16,7 +16,7 @@ public static class OutlookEventMapper
             Location = source.Location,
             Provider = "Outlook365",
             CalendarId = source.CalendarId,
-            IsAllDay = source.IsAllDay
+            IsAllDay = source.IsAllDay,
         };
     }
 }
@@ -29,4 +29,5 @@ public sealed record OutlookEventModel(
     DateTimeOffset EndUtc,
     string? Location,
     string CalendarId,
-    bool IsAllDay);
+    bool IsAllDay
+);

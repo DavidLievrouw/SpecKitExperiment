@@ -9,8 +9,16 @@ public sealed class TokenRefreshOrchestrator
         _authenticationService = authenticationService;
     }
 
-    public async Task<string> RefreshTokenAsync(string provider, IReadOnlyList<string> scopes, CancellationToken cancellationToken = default)
+    public async Task<string> RefreshTokenAsync(
+        string provider,
+        IReadOnlyList<string> scopes,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await _authenticationService.AcquireAccessTokenAsync(provider, scopes, cancellationToken);
+        return await _authenticationService.AcquireAccessTokenAsync(
+            provider,
+            scopes,
+            cancellationToken
+        );
     }
 }

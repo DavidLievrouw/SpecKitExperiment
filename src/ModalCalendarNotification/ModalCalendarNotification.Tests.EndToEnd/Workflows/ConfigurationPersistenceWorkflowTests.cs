@@ -11,18 +11,20 @@ public sealed class ConfigurationPersistenceWorkflowTests
     [Fact]
     public async Task ConfigurationPersistenceWorkflow_SettingsSurviveReload()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"modal-config-e2e-{Guid.NewGuid():N}.json");
+        string path = Path.Combine(Path.GetTempPath(), $"modal-config-e2e-{Guid.NewGuid():N}.json");
         var serviceA = new ConfigurationService(path);
 
-        await serviceA.SaveAsync(new ApplicationConfiguration
-        {
-            NotificationLeadTimeMinutes = 9,
-            AutoDismissTimeoutSeconds = 75,
-            ActiveProvider = "Outlook365"
-        });
+        await serviceA.SaveAsync(
+            new ApplicationConfiguration
+            {
+                NotificationLeadTimeMinutes = 9,
+                AutoDismissTimeoutSeconds = 75,
+                ActiveProvider = "Outlook365",
+            }
+        );
 
         var serviceB = new ConfigurationService(path);
-        var loaded = await serviceB.LoadAsync();
+        ApplicationConfiguration loaded = await serviceB.LoadAsync();
 
         loaded.NotificationLeadTimeMinutes.ShouldBe(9);
         loaded.AutoDismissTimeoutSeconds.ShouldBe(75);

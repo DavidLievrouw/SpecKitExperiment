@@ -19,9 +19,10 @@ public sealed class GoogleEventMapperTests
             DateTimeOffset.UtcNow.AddHours(1),
             "Room B",
             "team",
-            false);
+            false
+        );
 
-        var mapped = GoogleEventMapper.Map(source);
+        CalendarEvent mapped = GoogleEventMapper.Map(source);
         var expected = new CalendarEvent
         {
             Id = source.Id,
@@ -32,10 +33,10 @@ public sealed class GoogleEventMapperTests
             Location = source.Location,
             Provider = "GoogleCalendar",
             CalendarId = source.CalendarId,
-            IsAllDay = source.IsAllDay
+            IsAllDay = source.IsAllDay,
         };
 
-        var comparison = new CompareLogic().Compare(expected, mapped);
+        ComparisonResult? comparison = new CompareLogic().Compare(expected, mapped);
         comparison.AreEqual.ShouldBeTrue();
     }
 }

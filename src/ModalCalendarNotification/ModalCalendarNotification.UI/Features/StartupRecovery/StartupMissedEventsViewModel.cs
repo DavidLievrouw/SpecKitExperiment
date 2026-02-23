@@ -7,10 +7,10 @@ namespace ModalCalendarNotification.UI.Features.StartupRecovery;
 public partial class StartupMissedEventsViewModel : ObservableObject
 {
     [ObservableProperty]
-    private IReadOnlyList<CalendarEvent> _missedEvents = [];
+    private bool _isClosed;
 
     [ObservableProperty]
-    private bool _isClosed;
+    private IReadOnlyList<CalendarEvent> _missedEvents = [];
 
     [RelayCommand]
     private void Close()

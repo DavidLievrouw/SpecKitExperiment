@@ -19,9 +19,10 @@ public sealed class OutlookEventMapperTests
             DateTimeOffset.UtcNow.AddMinutes(30),
             "Room A",
             "primary",
-            false);
+            false
+        );
 
-        var mapped = OutlookEventMapper.Map(source);
+        CalendarEvent mapped = OutlookEventMapper.Map(source);
         var expected = new CalendarEvent
         {
             Id = source.Id,
@@ -32,10 +33,10 @@ public sealed class OutlookEventMapperTests
             Location = source.Location,
             Provider = "Outlook365",
             CalendarId = source.CalendarId,
-            IsAllDay = source.IsAllDay
+            IsAllDay = source.IsAllDay,
         };
 
-        var comparison = new CompareLogic().Compare(expected, mapped);
+        ComparisonResult? comparison = new CompareLogic().Compare(expected, mapped);
         comparison.AreEqual.ShouldBeTrue();
     }
 }

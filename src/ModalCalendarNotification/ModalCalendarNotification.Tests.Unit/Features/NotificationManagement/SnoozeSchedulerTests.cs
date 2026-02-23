@@ -1,5 +1,4 @@
 using ModalCalendarNotification.Core.Features.NotificationManagement;
-using ModalCalendarNotification.Core.Shared.Utilities;
 using Shouldly;
 using Xunit;
 using AppTimeProvider = ModalCalendarNotification.Core.Shared.Utilities.TimeProvider;
@@ -11,10 +10,10 @@ public sealed class SnoozeSchedulerTests
     [Fact]
     public void CalculateNextTrigger_AddsSnoozeDuration()
     {
-        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
         var sut = new SnoozeScheduler(new AppTimeProvider());
 
-        var next = sut.CalculateNextTrigger(now, 5);
+        DateTimeOffset next = sut.CalculateNextTrigger(now, 5);
 
         next.ShouldBe(now.AddMinutes(5));
     }

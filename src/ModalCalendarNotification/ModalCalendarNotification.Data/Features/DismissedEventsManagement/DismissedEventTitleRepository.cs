@@ -16,18 +16,20 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
-        var normalized = title.Trim();
-        var exists = await ExistsAsync(normalized, cancellationToken);
+        string normalized = title.Trim();
+        bool exists = await ExistsAsync(normalized, cancellationToken);
         if (exists)
         {
             return;
         }
 
-        _dbContext.DismissedEventTitles.Add(new DismissedEventTitleEntity
-        {
-            Title = normalized,
-            DismissedAtUtc = DateTimeOffset.UtcNow
-        });
+        _dbContext.DismissedEventTitles.Add(
+            new DismissedEventTitleEntity
+            {
+                Title = normalized,
+                DismissedAtUtc = DateTimeOffset.UtcNow,
+            }
+        );
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -35,20 +37,24 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     public async Task<bool> ExistsAsync(string title, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        var normalized = title.Trim().ToLowerInvariant();
+        string normalized = title.Trim().ToLowerInvariant();
 
-        return await _dbContext.DismissedEventTitles
-            .AnyAsync(x => x.Title.ToLower() == normalized, cancellationToken);
+        return await _dbContext.DismissedEventTitles.AnyAsync(
+            x => x.Title.ToLower() == normalized,
+            cancellationToken
+        );
     }
 
-    public async Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        return await _dbContext.DismissedEventTitles
-            .OrderBy(x => x.Title)
+        return await _dbContext
+            .DismissedEventTitles.OrderBy(x => x.Title)
             .Select(x => new DismissedEventTitle
             {
                 Title = x.Title,
-                DismissedAtUtc = x.DismissedAtUtc
+                DismissedAtUtc = x.DismissedAtUtc,
             })
             .ToListAsync(cancellationToken);
     }
@@ -56,10 +62,10 @@ public sealed class DismissedEventTitleRepository : IDismissedEventTitleReposito
     public async Task RemoveAsync(string title, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        var normalized = title.Trim().ToLowerInvariant();
+        string normalized = title.Trim().ToLowerInvariant();
 
-        var entities = await _dbContext.DismissedEventTitles
-            .Where(x => x.Title.ToLower() == normalized)
+        List<DismissedEventTitleEntity> entities = await _dbContext
+            .DismissedEventTitles.Where(x => x.Title.ToLower() == normalized)
             .ToListAsync(cancellationToken);
 
         if (entities.Count == 0)

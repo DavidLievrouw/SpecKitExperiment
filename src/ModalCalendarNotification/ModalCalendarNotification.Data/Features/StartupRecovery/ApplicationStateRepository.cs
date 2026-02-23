@@ -13,32 +13,43 @@ public sealed class ApplicationStateRepository : IApplicationStateRepository
         _dbContext = dbContext;
     }
 
-    public async Task<DateTimeOffset?> GetLastRunUtcAsync(CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset?> GetLastRunUtcAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        var entity = await _dbContext.ApplicationStates
-            .FirstOrDefaultAsync(x => x.Key == LastRunKey, cancellationToken);
+        ApplicationStateEntity? entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
+            x => x.Key == LastRunKey,
+            cancellationToken
+        );
 
         if (entity?.Value is null)
         {
             return null;
         }
 
-        return DateTimeOffset.TryParse(entity.Value, out var parsed) ? parsed : null;
+        return DateTimeOffset.TryParse(entity.Value, out DateTimeOffset parsed) ? parsed : null;
     }
 
-    public async Task SetLastRunUtcAsync(DateTimeOffset timestampUtc, CancellationToken cancellationToken = default)
+    public async Task SetLastRunUtcAsync(
+        DateTimeOffset timestampUtc,
+        CancellationToken cancellationToken = default
+    )
     {
-        var entity = await _dbContext.ApplicationStates
-            .FirstOrDefaultAsync(x => x.Key == LastRunKey, cancellationToken);
+        ApplicationStateEntity? entity = await _dbContext.ApplicationStates.FirstOrDefaultAsync(
+            x => x.Key == LastRunKey,
+            cancellationToken
+        );
 
         if (entity is null)
         {
-            _dbContext.ApplicationStates.Add(new ApplicationStateEntity
-            {
-                Key = LastRunKey,
-                Value = timestampUtc.ToString("O"),
-                UpdatedAtUtc = DateTimeOffset.UtcNow
-            });
+            _dbContext.ApplicationStates.Add(
+                new ApplicationStateEntity
+                {
+                    Key = LastRunKey,
+                    Value = timestampUtc.ToString("O"),
+                    UpdatedAtUtc = DateTimeOffset.UtcNow,
+                }
+            );
         }
         else
         {

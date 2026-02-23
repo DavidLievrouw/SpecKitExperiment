@@ -12,7 +12,7 @@ public sealed class DismissAllFutureWorkflowTests
     [Fact]
     public async Task DismissAllFutureWorkflow_FiltersFutureNotificationsByTitle()
     {
-        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
         var repository = new InMemoryDismissedTitleRepository();
         var viewModel = new NotificationModalViewModel(repository)
         {
@@ -22,9 +22,9 @@ public sealed class DismissAllFutureWorkflowTests
                 {
                     EventId = "1",
                     Title = "Daily Standup",
-                    StartUtc = now.AddMinutes(2)
-                }
-            ]
+                    StartUtc = now.AddMinutes(2),
+                },
+            ],
         };
 
         await viewModel.DismissAllFutureCommand.ExecuteAsync(null);
@@ -32,11 +32,27 @@ public sealed class DismissAllFutureWorkflowTests
         var engine = new NotificationEngine(repository);
         var upcoming = new List<CalendarEvent>
         {
-            new() { Id = "1", Title = "Daily Standup", StartUtc = now.AddMinutes(2), EndUtc = now.AddMinutes(3), Provider = "P", CalendarId = "C" },
-            new() { Id = "2", Title = "Architecture Review", StartUtc = now.AddMinutes(2), EndUtc = now.AddMinutes(3), Provider = "P", CalendarId = "C" }
+            new()
+            {
+                Id = "1",
+                Title = "Daily Standup",
+                StartUtc = now.AddMinutes(2),
+                EndUtc = now.AddMinutes(3),
+                Provider = "P",
+                CalendarId = "C",
+            },
+            new()
+            {
+                Id = "2",
+                Title = "Architecture Review",
+                StartUtc = now.AddMinutes(2),
+                EndUtc = now.AddMinutes(3),
+                Provider = "P",
+                CalendarId = "C",
+            },
         };
 
-        var notifications = engine.BuildNotifications(upcoming, now, 3);
+        IReadOnlyList<Notification> notifications = engine.BuildNotifications(upcoming, now, 3);
 
         notifications.Count.ShouldBe(1);
         notifications[0].Title.ShouldBe("Architecture Review");
@@ -48,23 +64,31 @@ public sealed class DismissAllFutureWorkflowTests
 
         public Task AddAsync(string title, CancellationToken cancellationToken = default)
         {
-            _items.Add(new DismissedEventTitle { Title = title, DismissedAtUtc = DateTimeOffset.UtcNow });
+            _items.Add(
+                new DismissedEventTitle { Title = title, DismissedAtUtc = DateTimeOffset.UtcNow }
+            );
             return Task.CompletedTask;
         }
 
         public Task<bool> ExistsAsync(string title, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_items.Any(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)));
+            return Task.FromResult(
+                _items.Any(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase))
+            );
         }
 
-        public Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(
+            CancellationToken cancellationToken = default
+        )
         {
             return Task.FromResult<IReadOnlyList<DismissedEventTitle>>(_items);
         }
 
         public Task RemoveAsync(string title, CancellationToken cancellationToken = default)
         {
-            _items.RemoveAll(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase));
+            _items.RemoveAll(x =>
+                string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)
+            );
             return Task.CompletedTask;
         }
     }

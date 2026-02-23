@@ -5,13 +5,12 @@ namespace ModalCalendarNotification.Data;
 public sealed class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
     public DbSet<ConfigurationEntity> Configurations => Set<ConfigurationEntity>();
 
-    public DbSet<DismissedEventTitleEntity> DismissedEventTitles => Set<DismissedEventTitleEntity>();
+    public DbSet<DismissedEventTitleEntity> DismissedEventTitles =>
+        Set<DismissedEventTitleEntity>();
 
     public DbSet<SelectedCalendarEntity> SelectedCalendars => Set<SelectedCalendarEntity>();
 

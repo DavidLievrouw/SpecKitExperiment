@@ -1,5 +1,5 @@
 using ModalCalendarNotification.CalendarProviders;
-using ModalCalendarNotification.Core.Features.Authentication;
+using ModalCalendarNotification.Core.Shared.Models;
 using Shouldly;
 using Xunit;
 
@@ -13,7 +13,10 @@ public sealed class OutlookCalendarProviderTests
         var auth = new CapturingAuthenticationService();
         var sut = new OutlookCalendarProvider(auth);
 
-        var events = await sut.GetEventsAsync(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1));
+        IReadOnlyList<CalendarEvent> events = await sut.GetEventsAsync(
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddHours(1)
+        );
 
         auth.CallCount.ShouldBe(1);
         events.ShouldNotBeNull();

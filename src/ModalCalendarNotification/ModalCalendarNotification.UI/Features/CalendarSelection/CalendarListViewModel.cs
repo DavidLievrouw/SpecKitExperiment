@@ -8,36 +8,42 @@ public partial class CalendarListViewModel : ObservableObject
 {
     private readonly ICalendarSelectionRepository _calendarSelectionRepository;
 
+    [ObservableProperty]
+    private bool _isSaved;
+
+    [ObservableProperty]
+    private IReadOnlyList<CalendarSelectionItem> _items = [];
+
     public CalendarListViewModel(ICalendarSelectionRepository calendarSelectionRepository)
     {
         _calendarSelectionRepository = calendarSelectionRepository;
     }
 
-    [ObservableProperty]
-    private IReadOnlyList<CalendarSelectionItem> _items = [];
-
-    [ObservableProperty]
-    private bool _isSaved;
-
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var selections = await _calendarSelectionRepository.GetSelectedAsync();
+        IReadOnlyList<SelectedCalendar> selections =
+            await _calendarSelectionRepository.GetSelectedAsync();
         Items = selections
-            .Select(x => new CalendarSelectionItem(x.ProviderName, x.CalendarId, x.DisplayName, x.IsSelected))
+            .Select(x => new CalendarSelectionItem(
+                x.ProviderName,
+                x.CalendarId,
+                x.DisplayName,
+                x.IsSelected
+            ))
             .ToList();
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        var selected = Items
+        List<SelectedCalendar> selected = Items
             .Select(x => new SelectedCalendar
             {
                 ProviderName = x.ProviderName,
                 CalendarId = x.CalendarId,
                 DisplayName = x.DisplayName,
-                IsSelected = x.IsSelected
+                IsSelected = x.IsSelected,
             })
             .ToList();
 
@@ -48,7 +54,15 @@ public partial class CalendarListViewModel : ObservableObject
 
 public sealed partial class CalendarSelectionItem : ObservableObject
 {
-    public CalendarSelectionItem(string providerName, string calendarId, string displayName, bool isSelected)
+    [ObservableProperty]
+    private bool _isSelected;
+
+    public CalendarSelectionItem(
+        string providerName,
+        string calendarId,
+        string displayName,
+        bool isSelected
+    )
     {
         ProviderName = providerName;
         CalendarId = calendarId;
@@ -61,7 +75,4 @@ public sealed partial class CalendarSelectionItem : ObservableObject
     public string CalendarId { get; }
 
     public string DisplayName { get; }
-
-    [ObservableProperty]
-    private bool _isSelected;
 }

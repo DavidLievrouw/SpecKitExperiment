@@ -6,5 +6,9 @@ public interface ICalendarProvider
 {
     string ProviderName { get; }
 
-    Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken = default
+    );
 }

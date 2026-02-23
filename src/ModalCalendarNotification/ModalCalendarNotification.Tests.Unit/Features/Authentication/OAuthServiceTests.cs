@@ -12,7 +12,7 @@ public sealed class OAuthServiceTests
         var tokenClient = new FakeMsalTokenClient("token-123");
         var sut = new OAuthService(tokenClient);
 
-        var token = await sut.AcquireAccessTokenAsync("Outlook365", ["Calendars.Read"]);
+        string token = await sut.AcquireAccessTokenAsync("Outlook365", ["Calendars.Read"]);
 
         token.ShouldBe("token-123");
     }
@@ -26,7 +26,11 @@ public sealed class OAuthServiceTests
             _token = token;
         }
 
-        public Task<string> AcquireTokenAsync(string provider, IReadOnlyList<string> scopes, CancellationToken cancellationToken)
+        public Task<string> AcquireTokenAsync(
+            string provider,
+            IReadOnlyList<string> scopes,
+            CancellationToken cancellationToken
+        )
         {
             return Task.FromResult(_token);
         }

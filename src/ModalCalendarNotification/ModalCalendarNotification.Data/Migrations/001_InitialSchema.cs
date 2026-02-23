@@ -8,6 +8,6 @@ public static class _001_InitialSchema
     [
         "CREATE TABLE IF NOT EXISTS Configuration (Key TEXT PRIMARY KEY, Value TEXT NOT NULL);",
         "CREATE TABLE IF NOT EXISTS DismissedEventTitle (Id INTEGER PRIMARY KEY AUTOINCREMENT, Title TEXT NOT NULL, DismissedAtUtc TEXT NOT NULL);",
-        "CREATE TABLE IF NOT EXISTS ApplicationState (Key TEXT PRIMARY KEY, Value TEXT NULL, UpdatedAtUtc TEXT NOT NULL);"
+        "CREATE TABLE IF NOT EXISTS ApplicationState (Key TEXT PRIMARY KEY, Value TEXT NULL, UpdatedAtUtc TEXT NOT NULL);",
     ];
 }

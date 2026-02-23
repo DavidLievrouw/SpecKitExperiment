@@ -9,7 +9,7 @@ public sealed class PollyPoliciesTests
     [Fact]
     public async Task ExecuteWithRetryAsync_RetriesAndEventuallySucceeds()
     {
-        var attempts = 0;
+        int attempts = 0;
 
         await PollyPolicies.ExecuteWithRetryAsync(
             async _ =>
@@ -21,8 +21,9 @@ public sealed class PollyPoliciesTests
                     throw new InvalidOperationException("Transient error");
                 }
             },
-            maxRetryAttempts: 3,
-            retryDelay: TimeSpan.FromMilliseconds(1));
+            3,
+            TimeSpan.FromMilliseconds(1)
+        );
 
         attempts.ShouldBe(3);
     }
@@ -30,16 +31,17 @@ public sealed class PollyPoliciesTests
     [Fact]
     public async Task ExecuteWithTimeoutAsync_ThrowsWhenOperationExceedsTimeout()
     {
-        var timeout = TimeSpan.FromMilliseconds(10);
+        TimeSpan timeout = TimeSpan.FromMilliseconds(10);
 
-        await Should.ThrowAsync<OperationCanceledException>(
-            async () =>
-                await PollyPolicies.ExecuteWithTimeoutAsync(
-                    async cancellationToken =>
-                    {
-                        await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
-                        return 42;
-                    },
-                    timeout));
+        await Should.ThrowAsync<OperationCanceledException>(async () =>
+            await PollyPolicies.ExecuteWithTimeoutAsync(
+                async cancellationToken =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
+                    return 42;
+                },
+                timeout
+            )
+        );
     }
 }

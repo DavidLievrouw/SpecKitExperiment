@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Data;
 using ModalCalendarNotification.Data.Features.DismissedEventsManagement;
 using Shouldly;
@@ -41,7 +42,7 @@ public sealed class DismissedEventTitleRepositoryTests
         await sut.AddAsync("Event A");
         await sut.AddAsync("Event B");
 
-        var all = await sut.GetAllAsync();
+        IReadOnlyList<DismissedEventTitle> all = await sut.GetAllAsync();
 
         all.Count.ShouldBe(2);
     }
@@ -58,12 +59,18 @@ public sealed class DismissedEventTitleRepositoryTests
 
         public AppDbContext DbContext { get; }
 
+        public async ValueTask DisposeAsync()
+        {
+            await DbContext.DisposeAsync();
+            await _connection.DisposeAsync();
+        }
+
         public static async Task<SqliteFixture> CreateAsync()
         {
             var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
 
-            var options = new DbContextOptionsBuilder<AppDbContext>()
+            DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseSqlite(connection)
                 .Options;
 
@@ -71,12 +78,6 @@ public sealed class DismissedEventTitleRepositoryTests
             await context.Database.EnsureCreatedAsync();
 
             return new SqliteFixture(connection, context);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await DbContext.DisposeAsync();
-            await _connection.DisposeAsync();
         }
     }
 }

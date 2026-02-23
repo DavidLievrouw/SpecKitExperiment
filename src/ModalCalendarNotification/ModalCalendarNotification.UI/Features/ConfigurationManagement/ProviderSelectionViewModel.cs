@@ -7,16 +7,16 @@ namespace ModalCalendarNotification.UI.Features.ConfigurationManagement;
 public partial class ProviderSelectionViewModel : ObservableObject
 {
     [ObservableProperty]
-    private IReadOnlyList<string> _availableProviders = ["Outlook365", "GoogleCalendar"];
-
-    [ObservableProperty]
-    private string _selectedProvider = "Outlook365";
-
-    [ObservableProperty]
     private string _accountLabel = string.Empty;
 
     [ObservableProperty]
+    private IReadOnlyList<string> _availableProviders = ["Outlook365", "GoogleCalendar"];
+
+    [ObservableProperty]
     private bool _isAccepted;
+
+    [ObservableProperty]
+    private string _selectedProvider = "Outlook365";
 
     public ProviderAccountItem? SelectedAccount { get; private set; }
 
@@ -26,8 +26,10 @@ public partial class ProviderSelectionViewModel : ObservableObject
         SelectedAccount = new ProviderAccountItem
         {
             ProviderName = SelectedProvider,
-            AccountLabel = string.IsNullOrWhiteSpace(AccountLabel) ? SelectedProvider : AccountLabel,
-            IsConnected = false
+            AccountLabel = string.IsNullOrWhiteSpace(AccountLabel)
+                ? SelectedProvider
+                : AccountLabel,
+            IsConnected = false,
         };
 
         IsAccepted = true;

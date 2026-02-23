@@ -5,7 +5,10 @@ namespace ModalCalendarNotification.CalendarProviders;
 
 public sealed class GoogleCalendarProvider : ICalendarProvider
 {
-    private static readonly IReadOnlyList<string> Scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
+    private static readonly IReadOnlyList<string> Scopes =
+    [
+        "https://www.googleapis.com/auth/calendar.readonly",
+    ];
     private readonly IAuthenticationService _authenticationService;
 
     public GoogleCalendarProvider(IAuthenticationService authenticationService)
@@ -15,9 +18,17 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
 
     public string ProviderName => "GoogleCalendar";
 
-    public async Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken = default
+    )
     {
-        _ = await _authenticationService.AcquireAccessTokenAsync(ProviderName, Scopes, cancellationToken);
+        _ = await _authenticationService.AcquireAccessTokenAsync(
+            ProviderName,
+            Scopes,
+            cancellationToken
+        );
 
         var sourceEvents = new List<GoogleEventModel>();
         return sourceEvents.Select(GoogleEventMapper.Map).ToList();

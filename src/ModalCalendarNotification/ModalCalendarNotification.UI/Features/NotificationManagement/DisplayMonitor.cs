@@ -4,13 +4,13 @@ namespace ModalCalendarNotification.UI.Features.NotificationManagement;
 
 public sealed class DisplayMonitor
 {
+    public DisplayInfo CurrentPrimaryDisplay { get; private set; } =
+        DisplayHelper.GetPrimaryDisplay();
     public event EventHandler<DisplayInfo>? PrimaryDisplayChanged;
-
-    public DisplayInfo CurrentPrimaryDisplay { get; private set; } = DisplayHelper.GetPrimaryDisplay();
 
     public void Refresh()
     {
-        var latest = DisplayHelper.GetPrimaryDisplay();
+        DisplayInfo latest = DisplayHelper.GetPrimaryDisplay();
         if (latest != CurrentPrimaryDisplay)
         {
             CurrentPrimaryDisplay = latest;

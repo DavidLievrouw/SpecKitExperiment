@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using ModalCalendarNotification.UI.Features.ConfigurationManagement;
@@ -9,8 +10,8 @@ namespace ModalCalendarNotification;
 public partial class App : Application
 {
     private ApplicationLifecycleManager? _lifecycleManager;
-    private SystemTrayViewModel? _systemTrayViewModel;
     private IServiceProvider? _serviceProvider;
+    private SystemTrayViewModel? _systemTrayViewModel;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -42,15 +43,12 @@ public partial class App : Application
         }
 
         _lifecycleManager?.Stop();
-        (_lifecycleManager as IDisposable)?.Dispose();
+        _lifecycleManager?.Dispose();
         Program.ReleaseSingleInstanceLock();
         base.OnExit(e);
     }
 
-    private void SystemTrayViewModel_PropertyChanged(
-        object? sender,
-        System.ComponentModel.PropertyChangedEventArgs e
-    )
+    private void SystemTrayViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (
             e.PropertyName == nameof(SystemTrayViewModel.IsExitRequested)

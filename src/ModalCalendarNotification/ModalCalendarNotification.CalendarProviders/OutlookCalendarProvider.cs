@@ -15,9 +15,17 @@ public sealed class OutlookCalendarProvider : ICalendarProvider
 
     public string ProviderName => "Outlook365";
 
-    public async Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CalendarEvent>> GetEventsAsync(
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken = default
+    )
     {
-        _ = await _authenticationService.AcquireAccessTokenAsync(ProviderName, Scopes, cancellationToken);
+        _ = await _authenticationService.AcquireAccessTokenAsync(
+            ProviderName,
+            Scopes,
+            cancellationToken
+        );
 
         var sourceEvents = new List<OutlookEventModel>();
         return sourceEvents.Select(OutlookEventMapper.Map).ToList();

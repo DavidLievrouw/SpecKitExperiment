@@ -1,4 +1,3 @@
-using System.IO;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.Core.Shared.Models;
 using Shouldly;
@@ -11,18 +10,18 @@ public sealed class ConfigurationServiceTests
     [Fact]
     public async Task SaveAndLoad_PersistsConfigurationValues()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"modal-config-{Guid.NewGuid():N}.json");
+        string path = Path.Combine(Path.GetTempPath(), $"modal-config-{Guid.NewGuid():N}.json");
         var sut = new ConfigurationService(path);
 
         var expected = new ApplicationConfiguration
         {
             NotificationLeadTimeMinutes = 7,
             AutoDismissTimeoutSeconds = 45,
-            ActiveProvider = "GoogleCalendar"
+            ActiveProvider = "GoogleCalendar",
         };
 
         await sut.SaveAsync(expected);
-        var actual = await sut.LoadAsync();
+        ApplicationConfiguration actual = await sut.LoadAsync();
 
         actual.NotificationLeadTimeMinutes.ShouldBe(7);
         actual.AutoDismissTimeoutSeconds.ShouldBe(45);

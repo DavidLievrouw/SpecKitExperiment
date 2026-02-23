@@ -6,7 +6,9 @@ public interface IDismissedEventTitleRepository
 
     Task<bool> ExistsAsync(string title, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DismissedEventTitle>> GetAllAsync(
+        CancellationToken cancellationToken = default
+    );
 
     Task RemoveAsync(string title, CancellationToken cancellationToken = default);
 }

@@ -9,34 +9,32 @@ public partial class NotificationModalViewModel : ObservableObject
 {
     private readonly IDismissedEventTitleRepository? _dismissedEventTitleRepository;
 
-    public NotificationModalViewModel()
-    {
-    }
+    [ObservableProperty]
+    private IReadOnlyList<NotificationEventItem> _events = [];
+
+    [ObservableProperty]
+    private bool _isClosed;
+
+    [ObservableProperty]
+    private string? _selectedEventTitle;
+
+    [ObservableProperty]
+    private int _snoozeMinutes = 5;
+
+    [ObservableProperty]
+    private string _title = "Upcoming Events";
+
+    public NotificationModalViewModel() { }
 
     public NotificationModalViewModel(IDismissedEventTitleRepository dismissedEventTitleRepository)
     {
         _dismissedEventTitleRepository = dismissedEventTitleRepository;
     }
 
-    [ObservableProperty]
-    private string _title = "Upcoming Events";
-
-    [ObservableProperty]
-    private IReadOnlyList<NotificationEventItem> _events = [];
-
     partial void OnEventsChanged(IReadOnlyList<NotificationEventItem> value)
     {
         SelectedEventTitle = value.FirstOrDefault()?.Title;
     }
-
-    [ObservableProperty]
-    private bool _isClosed;
-
-    [ObservableProperty]
-    private int _snoozeMinutes = 5;
-
-    [ObservableProperty]
-    private string? _selectedEventTitle;
 
     [RelayCommand]
     private void Dismiss()
@@ -53,7 +51,10 @@ public partial class NotificationModalViewModel : ObservableObject
     [RelayCommand]
     private async Task DismissAllFutureAsync()
     {
-        if (!string.IsNullOrWhiteSpace(SelectedEventTitle) && _dismissedEventTitleRepository is not null)
+        if (
+            !string.IsNullOrWhiteSpace(SelectedEventTitle)
+            && _dismissedEventTitleRepository is not null
+        )
         {
             await _dismissedEventTitleRepository.AddAsync(SelectedEventTitle);
         }

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using H.NotifyIcon;
@@ -9,8 +10,8 @@ namespace ModalCalendarNotification.UI.Features.SystemTrayManagement;
 
 public sealed class SystemTrayManager : IDisposable
 {
-    private readonly SystemTrayIcon _systemTrayIcon;
     private readonly ILogger _logger;
+    private readonly SystemTrayIcon _systemTrayIcon;
     private TaskbarIcon? _taskbarIcon;
     private string? _tempIconPath;
 
@@ -20,14 +21,43 @@ public sealed class SystemTrayManager : IDisposable
         _logger = logger;
     }
 
+    public void Dispose()
+    {
+        _logger.Information("Disposing system tray icon");
+
+        if (_taskbarIcon != null)
+        {
+            _taskbarIcon.Dispose();
+            _taskbarIcon = null;
+        }
+
+        // Clean up temp icon file
+        if (!string.IsNullOrEmpty(_tempIconPath) && File.Exists(_tempIconPath))
+        {
+            try
+            {
+                File.Delete(_tempIconPath);
+                _logger.Information("Deleted temporary icon file: {IconPath}", _tempIconPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(
+                    ex,
+                    "Failed to delete temporary icon file: {IconPath}",
+                    _tempIconPath
+                );
+            }
+        }
+    }
+
     public void Initialize()
     {
         _logger.Information("Initializing system tray icon");
 
         try
         {
-            var iconPath = GetApplicationIconPath();
-            var iconSource = PathToBitmapImage(iconPath);
+            string iconPath = GetApplicationIconPath();
+            BitmapImage iconSource = PathToBitmapImage(iconPath);
 
             _taskbarIcon = new TaskbarIcon
             {
@@ -36,18 +66,18 @@ public sealed class SystemTrayManager : IDisposable
             };
 
             // Create context menu
-            var contextMenu = new System.Windows.Controls.ContextMenu();
+            var contextMenu = new ContextMenu();
 
             // Add Settings menu item
-            var settingsItem = new System.Windows.Controls.MenuItem { Header = "Settings" };
+            var settingsItem = new MenuItem { Header = "Settings" };
             settingsItem.Click += (sender, args) => HandleSettingsClick();
             contextMenu.Items.Add(settingsItem);
 
             // Add separator
-            contextMenu.Items.Add(new System.Windows.Controls.Separator());
+            contextMenu.Items.Add(new Separator());
 
             // Add Exit menu item
-            var exitItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
+            var exitItem = new MenuItem { Header = "Exit" };
             exitItem.Click += (sender, args) => HandleExitClick();
             contextMenu.Items.Add(exitItem);
 
@@ -123,7 +153,7 @@ public sealed class SystemTrayManager : IDisposable
         {
             // Create a DrawingVisual to render the drawing
             var drawingVisual = new DrawingVisual();
-            using (var drawingContext = drawingVisual.RenderOpen())
+            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
             {
                 drawingContext.DrawDrawing(drawingImage.Drawing);
             }
@@ -153,14 +183,14 @@ public sealed class SystemTrayManager : IDisposable
         try
         {
             // Get temp directory
-            var tempDir = Path.Combine(Path.GetTempPath(), "ModalCalendarNotification");
+            string tempDir = Path.Combine(Path.GetTempPath(), "ModalCalendarNotification");
             Directory.CreateDirectory(tempDir);
 
             // Create unique ICO file path
             _tempIconPath = Path.Combine(tempDir, $"icon_{Guid.NewGuid()}.ico");
 
             // Convert bitmap to ICO format using pure managed code
-            var icoData = BitmapToIcoBytes(bitmap);
+            byte[] icoData = BitmapToIcoBytes(bitmap);
             File.WriteAllBytes(_tempIconPath, icoData);
 
             _logger.Information("Icon saved to {IconPath}", _tempIconPath);
@@ -236,7 +266,7 @@ public sealed class SystemTrayManager : IDisposable
             var backgroundBrush = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
             var borderPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 31, 41, 55)), 0.5);
 
-            var backgroundGeometry = Geometry.Parse("M2,2 L30,2 L30,30 L2,30 Z");
+            Geometry backgroundGeometry = Geometry.Parse("M2,2 L30,2 L30,30 L2,30 Z");
             drawingGroup.Children.Add(
                 new GeometryDrawing
                 {
@@ -248,7 +278,7 @@ public sealed class SystemTrayManager : IDisposable
 
             // Blue header
             var headerBrush = new SolidColorBrush(Color.FromArgb(255, 59, 130, 246));
-            var headerGeometry = Geometry.Parse("M2,2 L30,2 L30,8 L2,8 Z");
+            Geometry headerGeometry = Geometry.Parse("M2,2 L30,2 L30,8 L2,8 Z");
             drawingGroup.Children.Add(
                 new GeometryDrawing { Brush = headerBrush, Geometry = headerGeometry }
             );
@@ -272,7 +302,7 @@ public sealed class SystemTrayManager : IDisposable
             var writeableBitmap = new WriteableBitmap(32, 32, 96, 96, PixelFormats.Pbgra32, null);
 
             // Fill with blue color
-            var pixels = new uint[32 * 32];
+            uint[] pixels = new uint[32 * 32];
             for (int i = 0; i < pixels.Length; i++)
             {
                 pixels[i] = 0xFF3B82F6; // Blue
@@ -300,34 +330,5 @@ public sealed class SystemTrayManager : IDisposable
     {
         _logger.Information("Exit clicked from system tray");
         _systemTrayIcon.TriggerExit();
-    }
-
-    public void Dispose()
-    {
-        _logger.Information("Disposing system tray icon");
-
-        if (_taskbarIcon != null)
-        {
-            _taskbarIcon.Dispose();
-            _taskbarIcon = null;
-        }
-
-        // Clean up temp icon file
-        if (!string.IsNullOrEmpty(_tempIconPath) && File.Exists(_tempIconPath))
-        {
-            try
-            {
-                File.Delete(_tempIconPath);
-                _logger.Information("Deleted temporary icon file: {IconPath}", _tempIconPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(
-                    ex,
-                    "Failed to delete temporary icon file: {IconPath}",
-                    _tempIconPath
-                );
-            }
-        }
     }
 }

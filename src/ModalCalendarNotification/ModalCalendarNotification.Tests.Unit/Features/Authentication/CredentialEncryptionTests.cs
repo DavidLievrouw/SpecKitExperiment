@@ -11,8 +11,8 @@ public sealed class CredentialEncryptionTests
     {
         var sut = new CredentialEncryption();
 
-        var encrypted = sut.Encrypt("oauth-secret");
-        var decrypted = sut.Decrypt(encrypted);
+        string encrypted = sut.Encrypt("oauth-secret");
+        string decrypted = sut.Decrypt(encrypted);
 
         decrypted.ShouldBe("oauth-secret");
     }
