@@ -11,7 +11,7 @@ public sealed class GoogleCalendarProviderTests
     public async Task GetEventsAsync_AcquiresAccessToken()
     {
         var auth = new CapturingAuthenticationService();
-        var logger = A.Fake<Microsoft.Extensions.Logging.ILogger<CapturingAuthenticationService>>();
+        var logger = A.Fake<Microsoft.Extensions.Logging.ILogger<GoogleCalendarProvider>>();
         var sut = new GoogleCalendarProvider(auth, logger);
 
         var events = await sut.GetEventsAsync(

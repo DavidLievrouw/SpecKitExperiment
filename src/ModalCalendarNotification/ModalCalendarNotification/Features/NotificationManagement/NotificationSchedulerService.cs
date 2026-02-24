@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using ModalCalendarNotification.CalendarProviders;
 using ModalCalendarNotification.Core.Features.CalendarIntegration;
@@ -21,7 +21,7 @@ public sealed class NotificationSchedulerService : IDisposable
     private readonly IConfigurationService _configurationService;
     private readonly INotificationEngine _notificationEngine;
     private readonly TimeProvider _timeProvider;
-    private readonly ILogger _logger;
+    private readonly ILogger<NotificationSchedulerService> _logger;
     private readonly ICachedEventsRepository _cachedEventsRepository;
     private readonly ISyncStatusService _syncStatusService;
     private Timer? _syncTimer;
@@ -36,7 +36,7 @@ public sealed class NotificationSchedulerService : IDisposable
         IConfigurationService configurationService,
         INotificationEngine notificationEngine,
         TimeProvider timeProvider,
-        ILogger logger,
+        ILogger<NotificationSchedulerService> logger,
         ICachedEventsRepository cachedEventsRepository,
         ISyncStatusService syncStatusService
     )

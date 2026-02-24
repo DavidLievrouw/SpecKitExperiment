@@ -13,9 +13,9 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
     ];
     private readonly IAuthenticationService _authenticationService;
     private readonly HttpClient _httpClient;
-    private readonly ILogger _logger;
+    private readonly ILogger<GoogleCalendarProvider> _logger;
 
-    public GoogleCalendarProvider(IAuthenticationService authenticationService, ILogger logger)
+    public GoogleCalendarProvider(IAuthenticationService authenticationService, ILogger<GoogleCalendarProvider> logger)
     {
         _authenticationService = authenticationService;
         _logger = logger;

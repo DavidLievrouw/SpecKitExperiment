@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -37,6 +38,9 @@ public static class ServiceConfiguration
         services.AddSingleton<AppTimeProvider>();
 
         // Database
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite("Data Source=ModalCalendarNotification.db")
+        );
         services.AddScoped<DatabaseInitializationService>();
         services.AddSingleton(Log.Logger);
         services.AddLogging(loggingBuilder =>
@@ -106,7 +110,7 @@ public static class ServiceConfiguration
                 sp.GetRequiredService<IConfigurationService>(),
                 sp.GetRequiredService<INotificationEngine>(),
                 sp.GetRequiredService<AppTimeProvider>(),
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger>(),
+                sp.GetRequiredService<ILogger<NotificationSchedulerService>>(),
                 sp.GetRequiredService<ICachedEventsRepository>(),
                 sp.GetRequiredService<ISyncStatusService>()
             )
@@ -121,8 +125,18 @@ public static class ServiceConfiguration
         );
 
         // Calendar Providers
-        services.AddSingleton<OutlookCalendarProvider>();
-        services.AddSingleton<GoogleCalendarProvider>();
+        services.AddSingleton(sp =>
+            new OutlookCalendarProvider(
+                sp.GetRequiredService<IAuthenticationService>(),
+                sp.GetRequiredService<ILogger<OutlookCalendarProvider>>()
+            )
+        );
+        services.AddSingleton(sp =>
+            new GoogleCalendarProvider(
+                sp.GetRequiredService<IAuthenticationService>(),
+                sp.GetRequiredService<ILogger<GoogleCalendarProvider>>()
+            )
+        );
 
         // System Tray
         services.AddSingleton<SystemTrayViewModel>();

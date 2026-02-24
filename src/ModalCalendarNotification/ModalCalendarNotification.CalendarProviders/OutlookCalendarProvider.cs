@@ -10,9 +10,9 @@ public sealed class OutlookCalendarProvider : ICalendarProvider
     private static readonly IReadOnlyList<string> Scopes = ["Calendars.Read"];
     private readonly IAuthenticationService _authenticationService;
     private readonly HttpClient _httpClient;
-    private readonly ILogger _logger;
+    private readonly ILogger<OutlookCalendarProvider> _logger;
 
-    public OutlookCalendarProvider(IAuthenticationService authenticationService, ILogger logger)
+    public OutlookCalendarProvider(IAuthenticationService authenticationService, ILogger<OutlookCalendarProvider> logger)
     {
         _authenticationService = authenticationService;
         _logger = logger;

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using ModalCalendarNotification.Core.Features.CalendarIntegration;
 using ModalCalendarNotification.Core.Shared.Models;
 
@@ -54,13 +54,15 @@ public sealed class CachedEventsRepository : ICachedEventsRepository
         CancellationToken cancellationToken = default
     )
     {
+        // Load cached events and filter in-memory to avoid DateTimeOffset translation issues in SQLite.
         var cachedEntities = await _dbContext.CachedCalendarEvents
-            .Where(e => e.StartUtc >= fromUtc && e.StartUtc <= toUtc)
-            .OrderBy(e => e.StartUtc)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         return cachedEntities
-            .ConvertAll(e => new CalendarEvent
+            .Where(e => e.StartUtc >= fromUtc && e.StartUtc <= toUtc)
+            .OrderBy(e => e.StartUtc)
+            .Select(e => new CalendarEvent
             {
                 Id = e.EventId,
                 Title = e.Title,
@@ -72,7 +74,7 @@ public sealed class CachedEventsRepository : ICachedEventsRepository
                 CalendarId = e.CalendarId,
                 IsAllDay = e.IsAllDay,
             })
-;
+            .ToList();
     }
 
     public async Task ClearOldEventsAsync(CancellationToken cancellationToken = default)
