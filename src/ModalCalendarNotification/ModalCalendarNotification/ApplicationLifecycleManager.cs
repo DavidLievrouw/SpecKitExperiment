@@ -12,21 +12,39 @@ public sealed class ApplicationLifecycleManager : IDisposable
 {
     private readonly object _sync = new();
     private readonly SystemTrayManager _systemTrayManager;
-    private readonly IServiceProvider _serviceProvider;
     private readonly NotificationSchedulerService _notificationScheduler;
+    private readonly MissedEventRecoveryService _missedEventRecoveryService;
+    private readonly IConfigurationService _configurationService;
+    private readonly TimeProvider _timeProvider;
+    private readonly OutlookCalendarProvider _outlookProvider;
+    private readonly GoogleCalendarProvider _googleProvider;
+    private readonly Func<StartupMissedEventsViewModel> _createStartupMissedEventsViewModel;
     private bool _disposed;
 
     public ApplicationLifecycleManager(
         SystemTrayManager systemTrayManager,
-        IServiceProvider serviceProvider,
-        NotificationSchedulerService notificationScheduler
+        NotificationSchedulerService notificationScheduler,
+        MissedEventRecoveryService missedEventRecoveryService,
+        IConfigurationService configurationService,
+        TimeProvider timeProvider,
+        OutlookCalendarProvider outlookProvider,
+        GoogleCalendarProvider googleProvider,
+        Func<StartupMissedEventsViewModel> createStartupMissedEventsViewModel
     )
     {
         _systemTrayManager =
             systemTrayManager ?? throw new ArgumentNullException(nameof(systemTrayManager));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _notificationScheduler =
             notificationScheduler ?? throw new ArgumentNullException(nameof(notificationScheduler));
+        _missedEventRecoveryService =
+            missedEventRecoveryService ?? throw new ArgumentNullException(nameof(missedEventRecoveryService));
+        _configurationService =
+            configurationService ?? throw new ArgumentNullException(nameof(configurationService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _outlookProvider = outlookProvider ?? throw new ArgumentNullException(nameof(outlookProvider));
+        _googleProvider = googleProvider ?? throw new ArgumentNullException(nameof(googleProvider));
+        _createStartupMissedEventsViewModel = createStartupMissedEventsViewModel ??
+            throw new ArgumentNullException(nameof(createStartupMissedEventsViewModel));
     }
 
     public bool IsRunning { get; private set; }
@@ -46,7 +64,7 @@ public sealed class ApplicationLifecycleManager : IDisposable
         }
     }
 
-    public async void Start()
+    public void Start()
     {
         lock (_sync)
         {
@@ -59,8 +77,8 @@ public sealed class ApplicationLifecycleManager : IDisposable
             _systemTrayManager.Initialize();
         }
 
-        // Start notification scheduler to monitor events
-        await _notificationScheduler.StartSchedulerAsync();
+        // Start notification scheduler to monitor events (non-blocking)
+        _ = _notificationScheduler.StartSchedulerAsync();
 
         // Check for missed events on startup (non-blocking)
         _ = CheckForMissedEventsAsync();
@@ -70,36 +88,8 @@ public sealed class ApplicationLifecycleManager : IDisposable
     {
         try
         {
-            // Get required services
-            var recoveryService = _serviceProvider.GetService(
-                typeof(MissedEventRecoveryService)
-            ) as MissedEventRecoveryService;
-
-            var timeProvider = _serviceProvider.GetService(typeof(TimeProvider)) as TimeProvider;
-            var configService = _serviceProvider.GetService(
-                typeof(IConfigurationService)
-            ) as IConfigurationService;
-
-            var outlookProvider = _serviceProvider.GetService(
-                typeof(OutlookCalendarProvider)
-            ) as OutlookCalendarProvider;
-
-            var googleProvider = _serviceProvider.GetService(
-                typeof(GoogleCalendarProvider)
-            ) as GoogleCalendarProvider;
-
-            if (
-                recoveryService == null
-                || timeProvider == null
-                || configService == null
-                || (outlookProvider == null && googleProvider == null)
-            )
-            {
-                return;
-            }
-
             // Get configuration to check if we have any configured providers
-            var config = await configService.LoadAsync();
+            var config = await _configurationService.LoadAsync();
             if (config.ProviderAccounts.Count == 0)
             {
                 // No providers configured, skip missed event detection
@@ -108,18 +98,15 @@ public sealed class ApplicationLifecycleManager : IDisposable
 
             // Collect events from all configured providers
             var allEvents = new List<Core.Shared.Models.CalendarEvent>();
-            var now = timeProvider.UtcNow;
+            var now = _timeProvider.UtcNow;
             var lookback = now.AddHours(-24);
 
             // Fetch from Outlook365 if configured
-            if (
-                config.ProviderAccounts.Any(p => p.ProviderName == "Outlook365")
-                && outlookProvider != null
-            )
+            if (config.ProviderAccounts.Any(p => p.ProviderName == "Outlook365"))
             {
                 try
                 {
-                    var outlookEvents = await outlookProvider.GetEventsAsync(lookback, now.AddHours(1));
+                    var outlookEvents = await _outlookProvider.GetEventsAsync(lookback, now.AddHours(1));
                     allEvents.AddRange(outlookEvents);
                 }
                 catch (Exception ex)
@@ -131,14 +118,11 @@ public sealed class ApplicationLifecycleManager : IDisposable
             }
 
             // Fetch from Google Calendar if configured
-            if (
-                config.ProviderAccounts.Any(p => p.ProviderName == "GoogleCalendar")
-                && googleProvider != null
-            )
+            if (config.ProviderAccounts.Any(p => p.ProviderName == "GoogleCalendar"))
             {
                 try
                 {
-                    var googleEvents = await googleProvider.GetEventsAsync(lookback, now.AddHours(1));
+                    var googleEvents = await _googleProvider.GetEventsAsync(lookback, now.AddHours(1));
                     allEvents.AddRange(googleEvents);
                 }
                 catch (Exception ex)
@@ -155,7 +139,7 @@ public sealed class ApplicationLifecycleManager : IDisposable
             }
 
             // Detect missed events using the recovery service
-            var missedEvents = await recoveryService.RecoverMissedEventsAsync(allEvents, now);
+            var missedEvents = await _missedEventRecoveryService.RecoverMissedEventsAsync(allEvents, now);
 
             if (missedEvents.Count == 0)
             {
@@ -176,10 +160,8 @@ public sealed class ApplicationLifecycleManager : IDisposable
     {
         try
         {
-            if (
-                _serviceProvider.GetService(typeof(StartupMissedEventsViewModel))
-                    is not StartupMissedEventsViewModel viewModel
-            )
+            var viewModel = _createStartupMissedEventsViewModel();
+            if (viewModel == null)
             {
                 return;
             }

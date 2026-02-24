@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using ModalCalendarNotification.Data;
 using ModalCalendarNotification.UI.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
 using Serilog;
@@ -12,6 +13,7 @@ public partial class App : Application
     private ApplicationLifecycleManager? _lifecycleManager;
     private IServiceProvider? _serviceProvider;
     private SystemTrayViewModel? _systemTrayViewModel;
+    private Func<ConfigurationDialog>? _createConfigurationDialog;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -20,8 +22,14 @@ public partial class App : Application
         try
         {
             _serviceProvider = Program.CreateServiceProvider();
+
+            // Initialize database synchronously (blocking)
+            var dbInitializer = _serviceProvider.GetRequiredService<DatabaseInitializationService>();
+            dbInitializer.InitializeDatabaseAsync().GetAwaiter().GetResult();
+
             _lifecycleManager = _serviceProvider.GetRequiredService<ApplicationLifecycleManager>();
             _systemTrayViewModel = _serviceProvider.GetRequiredService<SystemTrayViewModel>();
+            _createConfigurationDialog = _serviceProvider.GetRequiredService<Func<ConfigurationDialog>>();
 
             // Subscribe to ViewModel state changes
             _systemTrayViewModel.PropertyChanged += SystemTrayViewModel_PropertyChanged;
@@ -73,13 +81,13 @@ public partial class App : Application
     {
         try
         {
-            if (_serviceProvider == null)
+            if (_createConfigurationDialog == null)
             {
-                Log.Warning("Service provider not available for opening settings dialog");
+                Log.Warning("ConfigurationDialog factory not available");
                 return;
             }
 
-            var configurationDialog = _serviceProvider.GetRequiredService<ConfigurationDialog>();
+            var configurationDialog = _createConfigurationDialog();
             configurationDialog.Owner = null; // No owner since we're in system tray
             configurationDialog.ShowDialog();
         }

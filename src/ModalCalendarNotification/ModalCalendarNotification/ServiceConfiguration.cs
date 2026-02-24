@@ -9,6 +9,7 @@ using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Core.Features.NotificationManagement;
 using ModalCalendarNotification.Core.Features.StartupRecovery;
+using ModalCalendarNotification.Data;
 using ModalCalendarNotification.Data.Features.CalendarIntegration;
 using ModalCalendarNotification.Data.Features.CalendarSelection;
 using ModalCalendarNotification.Data.Features.DismissedEventsManagement;
@@ -35,7 +36,8 @@ public static class ServiceConfiguration
         services.AddSingleton(configuration);
         services.AddSingleton<AppTimeProvider>();
 
-        // Logging
+        // Database
+        services.AddScoped<DatabaseInitializationService>();
         services.AddSingleton(Log.Logger);
         services.AddLogging(loggingBuilder =>
         {
@@ -57,6 +59,9 @@ public static class ServiceConfiguration
             )
         );
         services.AddSingleton<ConfigurationDialog>();
+        services.AddSingleton(sp => new Func<ConfigurationDialog>(() =>
+            sp.GetRequiredService<ConfigurationDialog>()
+        ));
         services.AddTransient<ProviderSelectionViewModel>();
         services.AddTransient<ProviderSelectionDialog>();
 
@@ -79,6 +84,9 @@ public static class ServiceConfiguration
         services.AddScoped<MissedEventRecoveryService>();
         services.AddTransient<StartupMissedEventsViewModel>();
         services.AddTransient<StartupMissedEventsModal>();
+        services.AddTransient(sp => new Func<StartupMissedEventsViewModel>(() =>
+            sp.GetRequiredService<StartupMissedEventsViewModel>()
+        ));
 
         // Notification Management
         services.AddSingleton<INotificationEngine, NotificationEngine>(sp =>
@@ -120,6 +128,17 @@ public static class ServiceConfiguration
         services.AddSingleton<SystemTrayViewModel>();
         services.AddSingleton<SystemTrayIcon>();
         services.AddSingleton<SystemTrayManager>();
-        services.AddSingleton<ApplicationLifecycleManager>();
+        services.AddSingleton(sp =>
+            new ApplicationLifecycleManager(
+                sp.GetRequiredService<SystemTrayManager>(),
+                sp.GetRequiredService<NotificationSchedulerService>(),
+                sp.GetRequiredService<MissedEventRecoveryService>(),
+                sp.GetRequiredService<IConfigurationService>(),
+                sp.GetRequiredService<AppTimeProvider>(),
+                sp.GetRequiredService<OutlookCalendarProvider>(),
+                sp.GetRequiredService<GoogleCalendarProvider>(),
+                sp.GetRequiredService<StartupMissedEventsViewModel>
+            )
+        );
     }
 }
