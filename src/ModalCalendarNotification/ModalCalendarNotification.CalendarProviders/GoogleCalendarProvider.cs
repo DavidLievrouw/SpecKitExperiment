@@ -82,8 +82,74 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         }
     }
 
+    public async Task<IReadOnlyList<Calendar>> GetAvailableCalendarsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var accessToken = await _authenticationService.AcquireAccessTokenAsync(
+                ProviderName,
+                Scopes,
+                cancellationToken
+            );
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogWarning("Failed to acquire access token for Google Calendar provider");
+                return [];
+            }
+
+            // Fetch calendar list from Google Calendar API
+            const string requestUrl = "https://www.googleapis.com/calendar/v3/users/me/calendarList";
+
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+            var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Google Calendar API returned {StatusCode} when fetching calendars",
+                    response.StatusCode
+                );
+                return [];
+            }
+
+            var jsonContent = await response.Content.ReadFromJsonAsync<GoogleCalendarsResponse>(
+                cancellationToken: cancellationToken
+            );
+
+            if (jsonContent?.Items == null)
+            {
+                return [];
+            }
+
+            return jsonContent.Items
+                .Select(c => new Calendar { Id = c.Id, DisplayName = c.Summary })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to fetch calendars from Google Calendar provider");
+            return [];
+        }
+    }
+
     private class GoogleCalendarApiResponse
     {
         public List<GoogleEventModel>? Items { get; set; }
+    }
+
+    private class GoogleCalendarsResponse
+    {
+        public List<GoogleCalendarModel>? Items { get; set; }
+    }
+
+    private class GoogleCalendarModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
     }
 }

@@ -11,4 +11,8 @@ public interface ICalendarProvider
         DateTimeOffset toUtc,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<Calendar>> GetAvailableCalendarsAsync(
+        CancellationToken cancellationToken = default
+    );
 }

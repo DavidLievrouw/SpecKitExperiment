@@ -77,8 +77,74 @@ public sealed class OutlookCalendarProvider : ICalendarProvider
         }
     }
 
+    public async Task<IReadOnlyList<Calendar>> GetAvailableCalendarsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var accessToken = await _authenticationService.AcquireAccessTokenAsync(
+                ProviderName,
+                Scopes,
+                cancellationToken
+            );
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogWarning("Failed to acquire access token for Outlook provider");
+                return [];
+            }
+
+            // Fetch calendars from Microsoft Graph API
+            const string requestUrl = "https://graph.microsoft.com/v1.0/me/calendars";
+
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+            var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Microsoft Graph API returned {StatusCode} when fetching calendars",
+                    response.StatusCode
+                );
+                return [];
+            }
+
+            var jsonContent = await response.Content.ReadFromJsonAsync<OutlookCalendarsResponse>(
+                cancellationToken: cancellationToken
+            );
+
+            if (jsonContent?.Value == null)
+            {
+                return [];
+            }
+
+            return jsonContent.Value
+                .Select(c => new Calendar { Id = c.Id, DisplayName = c.Name })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to fetch calendars from Outlook provider");
+            return [];
+        }
+    }
+
     private class OutlookApiResponse
     {
         public List<OutlookEventModel>? Value { get; set; }
+    }
+
+    private class OutlookCalendarsResponse
+    {
+        public List<OutlookCalendarModel>? Value { get; set; }
+    }
+
+    private class OutlookCalendarModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }

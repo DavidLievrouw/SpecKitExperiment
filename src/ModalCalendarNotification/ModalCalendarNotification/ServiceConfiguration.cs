@@ -3,8 +3,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModalCalendarNotification.CalendarProviders;
 using ModalCalendarNotification.Core.Features.Authentication;
+using ModalCalendarNotification.Core.Features.CalendarIntegration;
+using ModalCalendarNotification.Core.Features.CalendarSelection;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
+using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
+using ModalCalendarNotification.Core.Features.NotificationManagement;
+using ModalCalendarNotification.Core.Features.StartupRecovery;
+using ModalCalendarNotification.Data.Features.CalendarSelection;
+using ModalCalendarNotification.Data.Features.DismissedEventsManagement;
+using ModalCalendarNotification.Data.Features.StartupRecovery;
+using ModalCalendarNotification.Features.CalendarIntegration;
+using ModalCalendarNotification.Features.NotificationManagement;
+using ModalCalendarNotification.UI.Features.CalendarSelection;
 using ModalCalendarNotification.UI.Features.ConfigurationManagement;
+using ModalCalendarNotification.UI.Features.NotificationManagement;
+using ModalCalendarNotification.UI.Features.StartupRecovery;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
 using Serilog;
 using AppTimeProvider = ModalCalendarNotification.Core.Shared.Utilities.TimeProvider;
@@ -39,6 +52,54 @@ public static class ServiceConfiguration
         services.AddSingleton<ConfigurationDialog>();
         services.AddTransient<ProviderSelectionViewModel>();
         services.AddTransient<ProviderSelectionDialog>();
+
+        // Calendar Integration
+        services.AddSingleton<ICalendarProviderFactory, CalendarProviderFactory>();
+
+        // Calendar Selection
+        services.AddTransient<CalendarListViewModel>();
+        services.AddTransient<CalendarListDialog>();
+        services.AddScoped<ICalendarSelectionRepository, CalendarSelectionRepository>();
+
+        // Dismissed Events Management
+        services.AddScoped<IDismissedEventTitleRepository, DismissedEventTitleRepository>();
+
+        // Startup Recovery
+        services.AddScoped<IApplicationStateRepository, ApplicationStateRepository>();
+        services.AddScoped<MissedEventDetector>();
+        services.AddScoped<MissedEventRecoveryService>();
+        services.AddTransient<StartupMissedEventsViewModel>();
+        services.AddTransient<StartupMissedEventsModal>();
+
+        // Notification Management
+        services.AddSingleton<INotificationEngine, NotificationEngine>(sp =>
+            new NotificationEngine(
+                sp.GetRequiredService<IDismissedEventTitleRepository>(),
+                sp.GetRequiredService<ICalendarSelectionRepository>()
+            )
+        );
+
+        services.AddSingleton<NotificationSchedulerService>(sp =>
+            new NotificationSchedulerService(
+                new ICalendarProvider[]
+                {
+                    sp.GetRequiredService<OutlookCalendarProvider>(),
+                    sp.GetRequiredService<GoogleCalendarProvider>(),
+                },
+                sp.GetRequiredService<IConfigurationService>(),
+                sp.GetRequiredService<INotificationEngine>(),
+                sp.GetRequiredService<AppTimeProvider>(),
+                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger>()
+            )
+        );
+
+        services.AddTransient(sp =>
+            new NotificationModalViewModel(
+                sp.GetRequiredService<IDismissedEventTitleRepository>(),
+                sp.GetRequiredService<IConfigurationService>(),
+                sp.GetRequiredService<AppTimeProvider>()
+            )
+        );
 
         // Calendar Providers
         services.AddSingleton<OutlookCalendarProvider>();

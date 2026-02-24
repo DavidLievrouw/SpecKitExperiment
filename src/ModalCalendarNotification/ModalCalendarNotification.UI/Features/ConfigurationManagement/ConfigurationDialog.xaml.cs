@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
+using ModalCalendarNotification.UI.Features.CalendarSelection;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
 
 namespace ModalCalendarNotification.UI.Features.ConfigurationManagement;
@@ -57,7 +58,7 @@ public partial class ConfigurationDialog : Window
         };
     }
 
-    private void OpenProviderSelectionDialog()
+    private async void OpenProviderSelectionDialog()
     {
         // Create a new instance of the dialog each time (WPF windows can only be shown once)
         var providerSelectionDialog =
@@ -86,6 +87,9 @@ public partial class ConfigurationDialog : Window
 
                 // Update the active provider
                 _viewModel.SelectedProvider = viewModel.SelectedAccount.ProviderName;
+
+                // Now show calendar selection dialog for the newly authenticated provider
+                await OpenCalendarSelectionDialogForNewProviderAsync(viewModel.SelectedAccount);
             }
         }
 
@@ -94,12 +98,49 @@ public partial class ConfigurationDialog : Window
         _viewModel.SelectedProviderAccount = null;
     }
 
+    private async Task OpenCalendarSelectionDialogForNewProviderAsync(ProviderAccountItem provider)
+    {
+        // Get calendar list view model and load available calendars from the provider
+        var calendarListViewModel = _serviceProvider.GetRequiredService<CalendarListViewModel>();
+
+        // Load available calendars from the newly authenticated provider
+        await calendarListViewModel.LoadAvailableCalendarsAsync(provider.ProviderName);
+
+        // Show the calendar selection dialog
+        var dialog = new CalendarListDialog(calendarListViewModel)
+        {
+            Owner = this,
+            Title = $"Select Calendars - {provider.AccountLabel}"
+        };
+
+        var result = dialog.ShowDialog();
+
+        if (result == true)
+        {
+            // Calendar selections have been saved by the dialog
+        }
+    }
+
     private void OpenCalendarSelectionDialog(ProviderAccountItem provider)
     {
-        // TODO: Implement calendar selection dialog for existing provider
-        _ = provider; // Mark as used to suppress warning
+        // Create a new instance of the dialog
+        var calendarListViewModel = _serviceProvider.GetRequiredService<CalendarListViewModel>();
 
-        // For now, just reset the flag
+        // Show the calendar selection dialog
+        var dialog = new CalendarListDialog(calendarListViewModel)
+        {
+            Owner = this,
+            Title = $"Select Calendars - {provider.AccountLabel}"
+        };
+
+        var result = dialog.ShowDialog();
+
+        if (result == true)
+        {
+            // Calendar selections have been saved by the dialog
+        }
+
+        // Reset the flag
         _viewModel.IsCalendarSelectionRequested = false;
         _viewModel.SelectedProviderAccount = null;
     }

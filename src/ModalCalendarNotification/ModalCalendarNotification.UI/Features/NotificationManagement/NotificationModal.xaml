@@ -6,8 +6,8 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
   Title="Calendar Notification"
-  Width="480"
-  Height="320"
+  Width="600"
+  Height="400"
   ResizeMode="NoResize"
   WindowStartupLocation="CenterScreen"
   Topmost="True"
@@ -25,10 +25,55 @@
       <ItemsControl ItemsSource="{Binding Events}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Margin="0,0,0,8" Padding="8" BorderBrush="LightGray" BorderThickness="1">
+            <Border Margin="0,0,0,12" Padding="12" BorderBrush="LightGray" BorderThickness="1" CornerRadius="4">
               <StackPanel>
-                <TextBlock Text="{Binding Title}" FontWeight="Bold" />
-                <TextBlock Text="{Binding StartUtc}" FontSize="12" />
+                <!-- Event Title and Time -->
+                <Grid Margin="0,0,0,8">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap" />
+                    <TextBlock
+                      Text="{Binding StartUtc, StringFormat='Starts: {0:ddd h:mm tt}'}"
+                      FontSize="12"
+                      Foreground="Gray"
+                      Margin="0,4,0,0"
+                    />
+                    <!-- Provider and Account Label -->
+                    <TextBlock
+                      Text="{Binding ProviderAccountLabel}"
+                      FontSize="11"
+                      Foreground="DarkGray"
+                      Margin="0,2,0,0"
+                    />
+                  </StackPanel>
+                </Grid>
+
+                <!-- Per-Event Action Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                  <Button
+                    Content="Dismiss"
+                    Padding="8,4"
+                    Margin="0,0,4,0"
+                    Command="{Binding DataContext.DismissSingleEventCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                  />
+                  <Button
+                    Content="Snooze"
+                    Padding="8,4"
+                    Margin="0,0,4,0"
+                    Command="{Binding DataContext.SnoozeSingleEventCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                  />
+                  <Button
+                    Content="Dismiss All Future"
+                    Padding="8,4"
+                    Command="{Binding DataContext.DismissAllFutureCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                  />
+                </StackPanel>
               </StackPanel>
             </Border>
           </DataTemplate>
@@ -36,15 +81,10 @@
       </ItemsControl>
     </ScrollViewer>
 
+    <!-- Global Action Buttons -->
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-      <Button
-        Content="Dismiss All Future"
-        Width="140"
-        Margin="0,0,8,0"
-        Command="{Binding DismissAllFutureCommand}"
-      />
-      <Button Content="Snooze" Width="88" Margin="0,0,8,0" Command="{Binding SnoozeCommand}" />
-      <Button Content="Dismiss" Width="88" Command="{Binding DismissCommand}" />
+      <Button Width="90" Margin="0,0,8,0" Content="Snooze All" Command="{Binding SnoozeCommand}" />
+      <Button Width="90" Content="Dismiss All" Command="{Binding DismissCommand}" />
     </StackPanel>
   </Grid>
 </Window>

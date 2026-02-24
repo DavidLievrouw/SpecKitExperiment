@@ -6,14 +6,18 @@
   Width="500"
   Height="360"
   WindowStartupLocation="CenterOwner"
+  ResizeMode="NoResize"
 >
   <Grid Margin="16">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ListView ItemsSource="{Binding Items}">
+    <TextBlock Grid.Row="0" Text="Select which calendars to monitor:" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+    <ListView Grid.Row="1" ItemsSource="{Binding Items}">
       <ListView.View>
         <GridView>
           <GridViewColumn Header="Selected" Width="80">
@@ -40,9 +44,9 @@
       </ListView.View>
     </ListView>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-      <Button Width="90" Margin="0,0,8,0" Content="Load" Command="{Binding LoadCommand}" />
-      <Button Width="90" Content="Save" Command="{Binding SaveCommand}" />
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button Width="90" Margin="0,0,8,0" Content="Apply" Command="{Binding SaveCommand}" />
+      <Button Width="90" Content="Cancel" IsCancel="True" />
     </StackPanel>
   </Grid>
 </Window>
