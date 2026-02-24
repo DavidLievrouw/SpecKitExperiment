@@ -11,4 +11,6 @@ public sealed record NotificationEventItem
     public string Provider { get; init; } = string.Empty;
 
     public string ProviderAccountLabel { get; init; } = string.Empty;
+
+    public int SnoozeDurationMinutes { get; init; } = 5;
 }

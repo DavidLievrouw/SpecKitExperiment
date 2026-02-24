@@ -70,7 +70,7 @@ public partial class CalendarListViewModel : ObservableObject
                 ));
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log or handle error appropriately
             Items.Clear();

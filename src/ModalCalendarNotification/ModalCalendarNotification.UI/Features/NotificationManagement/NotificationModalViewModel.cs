@@ -100,7 +100,7 @@ public partial class NotificationModalViewModel : ObservableObject
         groupedEvents.Add(currentGroup);
 
         // For now, display first group. In multi-modal system, would show all groups
-        foreach (var evt in groupedEvents.First())
+        foreach (var evt in groupedEvents[0])
         {
             Events.Add(evt);
         }
@@ -222,8 +222,7 @@ public partial class NotificationModalViewModel : ObservableObject
         }
 
         // Remove all events with this title from the modal
-        var eventsWithTitle = Events.Where(e => e.Title == titleToDismiss).ToList();
-        foreach (var evt in eventsWithTitle)
+        foreach (var evt in Events.Where(e => e.Title == titleToDismiss).ToList())
         {
             Events.Remove(evt);
         }

@@ -9,6 +9,7 @@ using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Core.Features.NotificationManagement;
 using ModalCalendarNotification.Core.Features.StartupRecovery;
+using ModalCalendarNotification.Data.Features.CalendarIntegration;
 using ModalCalendarNotification.Data.Features.CalendarSelection;
 using ModalCalendarNotification.Data.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Data.Features.StartupRecovery;
@@ -48,18 +49,26 @@ public static class ServiceConfiguration
 
         // Configuration Management
         services.AddSingleton<IConfigurationService, ConfigurationService>();
-        services.AddSingleton<ConfigurationDialogViewModel>();
+        services.AddSingleton(sp =>
+            new ConfigurationDialogViewModel(
+                sp.GetRequiredService<IConfigurationService>(),
+                sp.GetRequiredService<IDismissedEventTitleRepository>(),
+                sp.GetRequiredService<ISyncStatusService>()
+            )
+        );
         services.AddSingleton<ConfigurationDialog>();
         services.AddTransient<ProviderSelectionViewModel>();
         services.AddTransient<ProviderSelectionDialog>();
 
         // Calendar Integration
         services.AddSingleton<ICalendarProviderFactory, CalendarProviderFactory>();
+        services.AddSingleton<ISyncStatusService, SyncStatusService>();
 
         // Calendar Selection
         services.AddTransient<CalendarListViewModel>();
         services.AddTransient<CalendarListDialog>();
         services.AddScoped<ICalendarSelectionRepository, CalendarSelectionRepository>();
+        services.AddScoped<ICachedEventsRepository, CachedEventsRepository>();
 
         // Dismissed Events Management
         services.AddScoped<IDismissedEventTitleRepository, DismissedEventTitleRepository>();
@@ -89,7 +98,9 @@ public static class ServiceConfiguration
                 sp.GetRequiredService<IConfigurationService>(),
                 sp.GetRequiredService<INotificationEngine>(),
                 sp.GetRequiredService<AppTimeProvider>(),
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger>()
+                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger>(),
+                sp.GetRequiredService<ICachedEventsRepository>(),
+                sp.GetRequiredService<ISyncStatusService>()
             )
         );
 

@@ -127,8 +127,8 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
             }
 
             return jsonContent.Items
-                .Select(c => new Calendar { Id = c.Id, DisplayName = c.Summary })
-                .ToList();
+                .ConvertAll(c => new Calendar { Id = c.Id, DisplayName = c.Summary })
+;
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ModalCalendarNotification.Core.Features.CalendarIntegration;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.Core.Features.DismissedEventsManagement;
 using ModalCalendarNotification.Core.Shared.Models;
@@ -12,6 +13,7 @@ public partial class ConfigurationDialogViewModel : ObservableObject
 {
     private readonly IConfigurationService _configurationService;
     private readonly IDismissedEventTitleRepository _dismissedEventTitleRepository;
+    private readonly ISyncStatusService? _syncStatusService;
 
     [ObservableProperty]
     private int _autoDismissTimeoutSeconds = 60;
@@ -34,6 +36,9 @@ public partial class ConfigurationDialogViewModel : ObservableObject
     [ObservableProperty]
     private string? _selectedDismissedTitle;
 
+    [ObservableProperty]
+    private SyncStatus _syncStatus = new() { IsConnected = true, LastSuccessfulSyncUtc = null };
+
     public ObservableCollection<ProviderAccountItem> ConfiguredProviders { get; } =
         new ObservableCollection<ProviderAccountItem>();
 
@@ -42,13 +47,25 @@ public partial class ConfigurationDialogViewModel : ObservableObject
 
     public ConfigurationDialogViewModel(
         IConfigurationService configurationService,
-        IDismissedEventTitleRepository dismissedEventTitleRepository
+        IDismissedEventTitleRepository dismissedEventTitleRepository,
+        ISyncStatusService? syncStatusService = null
     )
     {
         _configurationService = configurationService;
         _dismissedEventTitleRepository = dismissedEventTitleRepository;
+        _syncStatusService = syncStatusService;
+
         ApplicationVersion =
             Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+
+        // Subscribe to sync status changes
+        if (_syncStatusService != null)
+        {
+            _syncStatusService.SyncStatusChanged += (_, args) => SyncStatus = args.Status;
+
+            // Set initial status
+            SyncStatus = _syncStatusService.GetStatus();
+        }
     }
 
     public string ApplicationVersion { get; }

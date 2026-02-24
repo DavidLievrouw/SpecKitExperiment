@@ -122,8 +122,8 @@ public sealed class OutlookCalendarProvider : ICalendarProvider
             }
 
             return jsonContent.Value
-                .Select(c => new Calendar { Id = c.Id, DisplayName = c.Name })
-                .ToList();
+                .ConvertAll(c => new Calendar { Id = c.Id, DisplayName = c.Name })
+;
         }
         catch (Exception ex)
         {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using ModalCalendarNotification.CalendarProviders;
+using ModalCalendarNotification.Core.Features.CalendarIntegration;
 using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.Core.Features.NotificationManagement;
 using ModalCalendarNotification.Core.Shared.Models;
@@ -12,6 +13,7 @@ namespace ModalCalendarNotification.Features.NotificationManagement;
 /// <summary>
 /// Orchestrates calendar event monitoring, notification scheduling, and modal display.
 /// Periodically fetches events from configured providers and shows modals when notifications are due.
+/// Uses cached events when connection fails for offline support.
 /// </summary>
 public sealed class NotificationSchedulerService : IDisposable
 {
@@ -20,6 +22,8 @@ public sealed class NotificationSchedulerService : IDisposable
     private readonly INotificationEngine _notificationEngine;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger _logger;
+    private readonly ICachedEventsRepository _cachedEventsRepository;
+    private readonly ISyncStatusService _syncStatusService;
     private Timer? _syncTimer;
     private Timer? _notificationCheckTimer;
     private readonly ConcurrentDictionary<string, NotificationState> _pendingNotifications =
@@ -32,7 +36,9 @@ public sealed class NotificationSchedulerService : IDisposable
         IConfigurationService configurationService,
         INotificationEngine notificationEngine,
         TimeProvider timeProvider,
-        ILogger logger
+        ILogger logger,
+        ICachedEventsRepository cachedEventsRepository,
+        ISyncStatusService syncStatusService
     )
     {
         _providers = providers ?? [];
@@ -40,6 +46,8 @@ public sealed class NotificationSchedulerService : IDisposable
         _notificationEngine = notificationEngine;
         _timeProvider = timeProvider;
         _logger = logger;
+        _cachedEventsRepository = cachedEventsRepository;
+        _syncStatusService = syncStatusService;
     }
 
     public async Task StartSchedulerAsync()
@@ -105,6 +113,7 @@ public sealed class NotificationSchedulerService : IDisposable
             var lookAheadWindow = now.AddDays(7); // Look ahead 7 days for events
 
             var allEvents = new List<CalendarEvent>();
+            var syncSucceeded = true;
 
             // Fetch events from all configured providers
             foreach (var account in config.ProviderAccounts)
@@ -127,12 +136,28 @@ public sealed class NotificationSchedulerService : IDisposable
                 }
                 catch (Exception ex)
                 {
+                    syncSucceeded = false;
                     _logger.LogWarning(
                         ex,
-                        "Failed to sync events from provider {Provider}",
+                        "Failed to sync events from provider {Provider}, will use cached events",
                         account.ProviderName
                     );
                 }
+            }
+
+            // If sync failed or returned no events, use cached events
+            if (!syncSucceeded || allEvents.Count == 0)
+            {
+                _logger.LogInformation("Using cached events due to sync failure or empty results");
+                var cachedEvents = await _cachedEventsRepository.GetCachedEventsAsync(now, lookAheadWindow);
+                allEvents.AddRange(cachedEvents);
+                _syncStatusService.MarkSyncFailure("Failed to fetch fresh events from providers");
+            }
+            else
+            {
+                // Sync succeeded - cache the events for offline use
+                await _cachedEventsRepository.CacheEventsAsync(allEvents);
+                _syncStatusService.MarkSyncSuccess();
             }
 
             // Build notifications from collected events
@@ -183,7 +208,7 @@ public sealed class NotificationSchedulerService : IDisposable
 
             // Group notifications by their trigger time window (within 5 minutes)
             var groupedNotifications = GroupNotificationsByTimeWindow(
-                dueNotifications.Select(kvp => kvp.Value).ToList(),
+                dueNotifications.ConvertAll(kvp => kvp.Value),
                 timeWindowMinutes: 5
             );
 
@@ -243,7 +268,7 @@ public sealed class NotificationSchedulerService : IDisposable
         {
             // Create NotificationEventItem objects with provider info
             var eventItems = notifications
-                .Select(state => new Core.Features.NotificationManagement.NotificationEventItem
+                .ConvertAll(state => new Core.Features.NotificationManagement.NotificationEventItem
                 {
                     EventId = state.Notification.EventId,
                     Title = state.Notification.Title,
@@ -253,7 +278,7 @@ public sealed class NotificationSchedulerService : IDisposable
                         ? _eventAccountLabels[state.Notification.EventId]
                         : "Unknown",
                 })
-                .ToList();
+;
 
             _logger.LogInformation(
                 "Displaying notification modal with {EventCount} events",
