@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,6 +26,12 @@ public partial class ConfigurationDialogViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedProvider = "Outlook365";
 
+    [ObservableProperty]
+    private ProviderAccountItem? _selectedProviderAccount;
+
+    public ObservableCollection<ProviderAccountItem> ConfiguredProviders { get; } =
+        new ObservableCollection<ProviderAccountItem>();
+
     public ConfigurationDialogViewModel(IConfigurationService configurationService)
     {
         _configurationService = configurationService;
@@ -41,6 +48,13 @@ public partial class ConfigurationDialogViewModel : ObservableObject
         NotificationLeadTimeMinutes = config.NotificationLeadTimeMinutes;
         AutoDismissTimeoutSeconds = config.AutoDismissTimeoutSeconds;
         SelectedProvider = config.ActiveProvider;
+
+        // Load configured providers
+        ConfiguredProviders.Clear();
+        foreach (var account in config.ProviderAccounts)
+        {
+            ConfiguredProviders.Add(account);
+        }
     }
 
     [RelayCommand]
@@ -51,10 +65,37 @@ public partial class ConfigurationDialogViewModel : ObservableObject
             NotificationLeadTimeMinutes = NotificationLeadTimeMinutes,
             AutoDismissTimeoutSeconds = AutoDismissTimeoutSeconds,
             ActiveProvider = SelectedProvider,
+            ProviderAccounts = ConfiguredProviders.ToList(),
         };
 
         await _configurationService.SaveAsync(configuration);
         IsSaved = true;
+    }
+
+    [RelayCommand]
+    private void AddProvider()
+    {
+        // Trigger the provider selection dialog
+        IsCalendarSelectionRequested = true;
+    }
+
+    [RelayCommand]
+    private void RemoveProvider(ProviderAccountItem? provider)
+    {
+        if (provider != null)
+        {
+            ConfiguredProviders.Remove(provider);
+        }
+    }
+
+    [RelayCommand]
+    private void SelectCalendars(ProviderAccountItem? provider)
+    {
+        if (provider != null)
+        {
+            SelectedProviderAccount = provider;
+            IsCalendarSelectionRequested = true;
+        }
     }
 
     [RelayCommand]

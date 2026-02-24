@@ -16,17 +16,61 @@
 
     <TabControl>
       <TabItem Header="Provider">
-        <StackPanel Margin="12">
-          <TextBlock Text="Selected Provider" FontWeight="SemiBold" />
-          <TextBox Margin="0,8,0,0" Text="{Binding SelectedProvider}" />
+        <Grid Margin="12">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <TextBlock Text="Configured Calendar Providers" FontWeight="SemiBold" />
+
+          <DataGrid
+            Grid.Row="1"
+            Margin="0,8,0,12"
+            ItemsSource="{Binding ConfiguredProviders}"
+            AutoGenerateColumns="False"
+            IsReadOnly="False"
+            SelectionMode="Single"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+          >
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Provider" Binding="{Binding ProviderName}" Width="120" IsReadOnly="True" />
+              <DataGridTextColumn Header="Account Label" Binding="{Binding AccountLabel}" Width="*" IsReadOnly="True" />
+              <DataGridTemplateColumn Header="Actions" Width="120">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                      <Button
+                        Content="Select"
+                        Padding="8,4"
+                        Margin="0,0,5,0"
+                        Command="{Binding DataContext.SelectCalendarsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}"
+                      />
+                      <Button
+                        Content="Remove"
+                        Padding="8,4"
+                        Command="{Binding DataContext.RemoveProviderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}"
+                      />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+
           <Button
-            Margin="0,12,0,0"
+            Grid.Row="3"
             Width="150"
-            Content="Select Calendars"
+            Content="Add Calendar Provider"
             HorizontalAlignment="Left"
-            Command="{Binding OpenCalendarSelectionCommand}"
+            Command="{Binding AddProviderCommand}"
           />
-        </StackPanel>
+        </Grid>
       </TabItem>
 
       <TabItem Header="Notification">

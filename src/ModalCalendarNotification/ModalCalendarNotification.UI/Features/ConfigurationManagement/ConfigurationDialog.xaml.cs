@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
+using ModalCalendarNotification.Core.Features.ConfigurationManagement;
 using ModalCalendarNotification.UI.Features.SystemTrayManagement;
 
 namespace ModalCalendarNotification.UI.Features.ConfigurationManagement;
@@ -36,14 +37,22 @@ public partial class ConfigurationDialog : Window
         }
 
         // Subscribe to property changes
-        _viewModel.PropertyChanged += (sender, e) =>
+        _viewModel.PropertyChanged += (_, e) =>
         {
             if (
                 e.PropertyName == nameof(ConfigurationDialogViewModel.IsCalendarSelectionRequested)
                 && _viewModel.IsCalendarSelectionRequested
             )
             {
-                OpenProviderSelectionDialog();
+                // Check if we're adding a new provider or selecting calendars for existing one
+                if (_viewModel.SelectedProviderAccount == null)
+                {
+                    OpenProviderSelectionDialog();
+                }
+                else
+                {
+                    OpenCalendarSelectionDialog(_viewModel.SelectedProviderAccount);
+                }
             }
         };
     }
@@ -64,13 +73,35 @@ public partial class ConfigurationDialog : Window
             var viewModel = providerSelectionDialog.DataContext as ProviderSelectionViewModel;
             if (viewModel?.SelectedAccount != null)
             {
-                // Update the selected provider in the configuration dialog
+                // Add the new provider to the list if not already present
+                var existing = _viewModel.ConfiguredProviders.FirstOrDefault(p =>
+                    p.ProviderName == viewModel.SelectedAccount.ProviderName
+                    && p.AccountLabel == viewModel.SelectedAccount.AccountLabel
+                );
+
+                if (existing == null)
+                {
+                    _viewModel.ConfiguredProviders.Add(viewModel.SelectedAccount);
+                }
+
+                // Update the active provider
                 _viewModel.SelectedProvider = viewModel.SelectedAccount.ProviderName;
             }
         }
 
         // Reset the flag
         _viewModel.IsCalendarSelectionRequested = false;
+        _viewModel.SelectedProviderAccount = null;
+    }
+
+    private void OpenCalendarSelectionDialog(ProviderAccountItem provider)
+    {
+        // TODO: Implement calendar selection dialog for existing provider
+        _ = provider; // Mark as used to suppress warning
+
+        // For now, just reset the flag
+        _viewModel.IsCalendarSelectionRequested = false;
+        _viewModel.SelectedProviderAccount = null;
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)

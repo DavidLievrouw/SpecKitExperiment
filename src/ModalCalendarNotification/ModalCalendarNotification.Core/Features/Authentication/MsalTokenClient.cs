@@ -11,8 +11,8 @@ public sealed class MsalTokenClient : IMsalTokenClient
     /// <summary>
     /// Azure AD configuration for Office 365
     /// </summary>
-    private const string OutlookClientId = "YOUR_OUTLOOK_CLIENT_ID"; // TODO: Configure in appsettings.json
-    private const string OutlookTenantId = "common";
+    private const string OutlookClientId = "de996b3f-64d3-4413-a2c2-c35fb6db6eec";
+    private const string OutlookTenantId = "3981a187-d9f5-4012-abff-9c38082eded0";
 
     public MsalTokenClient(ILogger<MsalTokenClient> logger)
     {
